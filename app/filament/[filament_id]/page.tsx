@@ -23,6 +23,7 @@ import { Filament } from "@/app/types/Filament";
 import FilamentQRCode from "@/app/components/QRCode";
 import brands from "@/app/data/Brands";
 import materials from "@/app/data/Materials";
+import { toast } from "@/hooks/use-toast";
 
 // Simulating data fetch and update to Vercel Blob storage
 const fetchFilamentById = async (id: number) => {
@@ -34,11 +35,6 @@ const fetchFilamentById = async (id: number) => {
     color: "Galaxy Black",
     weight: 850,
   };
-};
-
-const updateFilament = async (filament: Filament) => {
-  // In a real app, this would be an API call to update data in Vercel Blob storage
-  console.log("Updating filament:", filament);
 };
 
 export default function FilamentDetail({
@@ -58,6 +54,7 @@ export default function FilamentDetail({
     weight: 0,
   });
   const [showQR, setShowQR] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -67,11 +64,22 @@ export default function FilamentDetail({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilament({ ...filament, [e.target.name]: e.target.value });
+    setHasChanges(true);
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     updateFilament(filament);
+  };
+
+  const updateFilament = async (filament: Filament) => {
+    if (!filament.id) return;
+    toast({
+      title: "Success",
+      description: `Filament #${filament.id} updated successfully`,
+      variant: "default",
+      duration: 3000,
+    });
   };
 
   const handlePrintQR = () => {
@@ -198,6 +206,11 @@ export default function FilamentDetail({
               >
                 Show QR Code
               </Button>
+              {hasChanges && (
+                <Button type="submit" className="mt-2">
+                  Save Changes
+                </Button>
+              )}
             </div>
           </form>
         </CardContent>

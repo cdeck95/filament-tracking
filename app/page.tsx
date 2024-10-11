@@ -13,12 +13,35 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Filament } from "./types/Filament";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import brands from "./data/Brands";
+import materials from "./data/Materials";
 
 export default function Home() {
   const [filaments, setFilaments] = useState<Filament[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortColumn, setSortColumn] = useState<keyof Filament>("id");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newFilament, setNewFilament] = useState<Omit<Filament, "id">>({
+    brand: "",
+    material: "",
+    color: "",
+    weight: 0,
+  });
 
   useEffect(() => {
     fetchFilaments();
@@ -43,18 +66,24 @@ export default function Home() {
     )
   );
 
-  const sortedFilaments = [...filteredFilaments].sort((a, b) => {
-    if (a[sortColumn] < b[sortColumn]) return sortDirection === "asc" ? -1 : 1;
-    if (a[sortColumn] > b[sortColumn]) return sortDirection === "asc" ? 1 : -1;
-    return 0;
-  });
-
-  const handleSort = (column: keyof Filament) => {
-    if (column === sortColumn) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortColumn(column);
-      setSortDirection("asc");
+  const handleAddFilament = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await fetch("/api/filaments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newFilament),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to add filament");
+      }
+      setIsAddDialogOpen(false);
+      setNewFilament({ brand: "", material: "", color: "", weight: 0 });
+      fetchFilaments();
+    } catch (error) {
+      console.error("Error adding filament:", error);
     }
   };
 
@@ -70,52 +99,112 @@ export default function Home() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full sm:max-w-sm"
         />
-        <Link href="/add-filament" className="w-full sm:w-auto">
-          <Button className="w-full sm:w-auto">Add New Filament</Button>
-        </Link>
+
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="w-full sm:w-auto">Add New Filament</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-[90%]">
+            <DialogHeader>
+              <DialogTitle>Add New Filament</DialogTitle>
+              <DialogDescription>
+                Enter the details of the new filament roll.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleAddFilament} className="space-y-4">
+              <div>
+                <Label htmlFor="brand">Brand</Label>
+                <Select
+                  value={newFilament.brand}
+                  onValueChange={(value) =>
+                    setNewFilament({ ...newFilament, brand: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select brand" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brands.map((brand) => (
+                      <SelectItem key={brand} value={brand}>
+                        {brand}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="material">Material</Label>
+                <Select
+                  value={newFilament.material}
+                  onValueChange={(value) =>
+                    setNewFilament({ ...newFilament, material: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select material" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {materials.map((material) => (
+                      <SelectItem key={material} value={material}>
+                        {material}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="color">Color</Label>
+                <Input
+                  id="color"
+                  value={newFilament.color}
+                  placeholder="Enter color"
+                  onChange={(e) =>
+                    setNewFilament({ ...newFilament, color: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="weight">Weight (g)</Label>
+                <Input
+                  id="weight"
+                  type="number"
+                  placeholder="Enter weight"
+                  value={newFilament.weight}
+                  onChange={(e) =>
+                    setNewFilament({
+                      ...newFilament,
+                      weight: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <Button type="submit">Add Filament</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <div className="overflow-x-auto -mx-4 sm:mx-0">
-        <Table className="min-w-full border-collapse border border-gray-200">
+      <div className="overflow-x-auto mx-auto">
+        <Table>
           <TableHeader>
             <TableRow>
-              {["id", "brand", "material", "color", "weight"].map((column) => (
-                <TableHead
-                  key={column}
-                  className="border border-gray-200 cursor-pointer"
-                  onClick={() => handleSort(column as keyof Filament)}
-                >
-                  {column.charAt(0).toUpperCase() + column.slice(1)}
-                  {sortColumn === column &&
-                    (sortDirection === "asc" ? " ▲" : " ▼")}
-                </TableHead>
-              ))}
-              <TableHead className="border border-gray-200">Actions</TableHead>
+              <TableHead>ID</TableHead>
+              <TableHead>Brand</TableHead>
+              <TableHead>Material</TableHead>
+              <TableHead>Color</TableHead>
+              <TableHead>Weight (g)</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedFilaments.map((filament) => (
+            {filteredFilaments.map((filament) => (
               <TableRow key={filament.id}>
-                <TableCell className="border border-gray-200">
-                  {filament.id}
+                <TableCell>
+                  <Link href={`/filament/${filament.id}`}>{filament.id}</Link>
                 </TableCell>
-                <TableCell className="border border-gray-200">
-                  {filament.brand}
-                </TableCell>
-                <TableCell className="border border-gray-200">
-                  {filament.material}
-                </TableCell>
-                <TableCell className="border border-gray-200">
-                  {filament.color}
-                </TableCell>
-                <TableCell className="border border-gray-200">
-                  {filament.weight}
-                </TableCell>
-                <TableCell className="border border-gray-200">
-                  <Link href={`/filament/${filament.id}`}>
-                    <Button variant="outline">Edit</Button>
-                  </Link>
-                </TableCell>
+                <TableCell>{filament.brand}</TableCell>
+                <TableCell>{filament.material}</TableCell>
+                <TableCell>{filament.color}</TableCell>
+                <TableCell>{filament.weight}</TableCell>
               </TableRow>
             ))}
           </TableBody>
