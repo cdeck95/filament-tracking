@@ -260,6 +260,7 @@ export default function Home() {
                   <TableRow
                     key={filament.id}
                     onClick={goToFilament(filament.id)}
+                    className="cursor-pointer hover:bg-gray-100"
                   >
                     <TableCell>{filament.id}</TableCell>
                     <TableCell>{filament.brand}</TableCell>
