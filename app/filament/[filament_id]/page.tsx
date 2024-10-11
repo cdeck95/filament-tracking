@@ -301,12 +301,12 @@ export default function FilamentDetail({
                     id="weight"
                     name="weight"
                     type="number"
-                    value={filament.weight}
+                    value={filament.weight || ""}
                     onChange={handleChange}
                     className="w-24"
                   />
                   <Slider
-                    value={[filament.weight]}
+                    value={[filament.weight || 0]}
                     onValueChange={(value) => {
                       setFilament({ ...filament, weight: value[0] });
                       setHasChanges(true);
