@@ -26,8 +26,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ModeToggle />
-          {children}
+          <div className="fixed top-4 left-4 z-50">
+            <ModeToggle />
+          </div>
+          <div className="mt-[10px]">{children}</div>
           <Toaster />
         </ThemeProvider>
       </body>
