@@ -234,7 +234,7 @@ export default function Home() {
 
   const combinedFilaments = useMemo(() => {
     const combined: { [key: string]: Filament & { totalWeight: number } } = {};
-    filaments.forEach((filament) => {
+    filteredFilaments.forEach((filament) => {
       const key = `${filament.brand}-${filament.material}-${filament.color}`;
       if (combined[key]) {
         combined[key].totalWeight += filament.weight || 0;
@@ -243,7 +243,7 @@ export default function Home() {
       }
     });
     return Object.values(combined);
-  }, [filaments]);
+  }, [filteredFilaments]);
 
   // // Transforming the `filaments` array to meet the requirement of having string `id` values
   // const transformedFilaments = filteredFilaments.map((filament) => ({
