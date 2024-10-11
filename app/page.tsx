@@ -162,7 +162,6 @@ export default function Home() {
     globalFilterFn: (row, columnId, filterValue) => {
       const value = row.getValue(columnId);
       if (typeof value === "string" || typeof value === "number") {
-        setSearchTerm(filterValue);
         return String(value)
           .toLowerCase()
           .includes(String(filterValue).toLowerCase());
@@ -258,11 +257,14 @@ export default function Home() {
   const combinedFilaments = useMemo(() => {
     const combined: { [key: string]: Filament & { totalWeight: number } } = {};
     filteredFilaments.forEach((filament) => {
-      const key = `${filament.brand}-${filament.material}-${filament.color}`;
+      const key = `${filament.brand}-${filament.material}-${filament.color.name}`;
+      const weightAsNumber = filament.weight
+        ? parseFloat(filament.weight.toString())
+        : 0; // Convert weight to a number
       if (combined[key]) {
-        combined[key].totalWeight += filament.weight || 0;
+        combined[key].totalWeight += weightAsNumber; // Add converted weight
       } else {
-        combined[key] = { ...filament, totalWeight: filament.weight || 0 };
+        combined[key] = { ...filament, totalWeight: weightAsNumber }; // Initialize with converted weight
       }
     });
     return Object.values(combined);
@@ -300,6 +302,8 @@ export default function Home() {
               data={transformedFilaments} // Use transformed filaments with string id
               layout="vertical" // Set layout to vertical
               margin={{ top: 10, right: 10, bottom: 10, left: 20 }}
+              barCategoryGap="20%" // Adjust the gap between categories
+              barGap={5} // Adjust the gap between bars within a category
             >
               <CartesianGrid horizontal={false} />
               <XAxis
@@ -314,8 +318,8 @@ export default function Home() {
               <YAxis
                 type="category"
                 dataKey="label" // Using the new concatenated label for y-axis
-                tick={{ fontSize: 12 }}
-                tickMargin={10}
+                tick={{ fontSize: 10 }}
+                tickMargin={20} // Increase tick margin for more space between labels
                 interval={0} // Show all labels
                 textAnchor="end"
               />
@@ -460,7 +464,10 @@ export default function Home() {
           <Input
             placeholder="Search brands, colors, materials..."
             value={globalFilter}
-            onChange={(event) => setGlobalFilter(event.target.value)}
+            onChange={(event) => {
+              setGlobalFilter(event.target.value);
+              setSearchTerm(event.target.value);
+            }}
             className="max-w-sm"
           />
           <DropdownMenu>
