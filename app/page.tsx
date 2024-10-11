@@ -1,101 +1,126 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Filament } from "./types/Filament";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [filaments, setFilaments] = useState<Filament[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortColumn, setSortColumn] = useState<keyof Filament>("id");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  useEffect(() => {
+    fetchFilaments();
+  }, []);
+
+  const fetchFilaments = async () => {
+    try {
+      const response = await fetch("/api/filaments");
+      if (!response.ok) {
+        throw new Error("Failed to fetch filaments");
+      }
+      const data = await response.json();
+      setFilaments(data);
+    } catch (error) {
+      console.error("Error fetching filaments:", error);
+    }
+  };
+
+  const filteredFilaments = filaments.filter((filament) =>
+    Object.values(filament).some((value) =>
+      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
+
+  const sortedFilaments = [...filteredFilaments].sort((a, b) => {
+    if (a[sortColumn] < b[sortColumn]) return sortDirection === "asc" ? -1 : 1;
+    if (a[sortColumn] > b[sortColumn]) return sortDirection === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (column: keyof Filament) => {
+    if (column === sortColumn) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6 text-center">Filament Tracker</h1>
+
+      <div className="mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <Input
+          type="text"
+          placeholder="Search filaments..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full sm:max-w-sm"
+        />
+        <Link href="/add-filament" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto">Add New Filament</Button>
+        </Link>
+      </div>
+
+      <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <Table className="min-w-full border-collapse border border-gray-200">
+          <TableHeader>
+            <TableRow>
+              {["id", "brand", "material", "color", "weight"].map((column) => (
+                <TableHead
+                  key={column}
+                  className="border border-gray-200 cursor-pointer"
+                  onClick={() => handleSort(column as keyof Filament)}
+                >
+                  {column.charAt(0).toUpperCase() + column.slice(1)}
+                  {sortColumn === column &&
+                    (sortDirection === "asc" ? " ▲" : " ▼")}
+                </TableHead>
+              ))}
+              <TableHead className="border border-gray-200">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedFilaments.map((filament) => (
+              <TableRow key={filament.id}>
+                <TableCell className="border border-gray-200">
+                  {filament.id}
+                </TableCell>
+                <TableCell className="border border-gray-200">
+                  {filament.brand}
+                </TableCell>
+                <TableCell className="border border-gray-200">
+                  {filament.material}
+                </TableCell>
+                <TableCell className="border border-gray-200">
+                  {filament.color}
+                </TableCell>
+                <TableCell className="border border-gray-200">
+                  {filament.weight}
+                </TableCell>
+                <TableCell className="border border-gray-200">
+                  <Link href={`/filament/${filament.id}`}>
+                    <Button variant="outline">Edit</Button>
+                  </Link>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
