@@ -4,7 +4,10 @@ interface FilamentQRCodeProps {
   id: number;
   brand: string;
   material: string;
-  color: string;
+  color: {
+    name: string;
+    hex: string;
+  };
 }
 
 export default function FilamentQRCode({
@@ -22,7 +25,7 @@ export default function FilamentQRCode({
       <QRCodeSVG value={url} size={256} />
       <p className="mt-4 text-lg font-semibold">Filament #{id}</p>
       <p>
-        {brand} - {material} - {color}
+        {brand} - {material} - {color.name}
       </p>
     </div>
   );

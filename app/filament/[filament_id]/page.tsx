@@ -38,6 +38,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
+import { colors } from "@/app/types/Colors";
 
 export default function FilamentDetail({
   params,
@@ -54,7 +55,10 @@ export default function FilamentDetail({
     id: 0,
     brand: "",
     material: "",
-    color: "",
+    color: {
+      name: "",
+      hex: "",
+    },
     weight: 0,
   });
   const [showQR, setShowQR] = useState(false);
@@ -286,12 +290,36 @@ export default function FilamentDetail({
 
               <div>
                 <Label htmlFor="color">Color</Label>
-                <Input
-                  id="color"
-                  name="color"
-                  value={filament.color}
-                  onChange={handleChange}
-                />
+                <Select
+                  value={filament.color.name}
+                  onValueChange={(value) => {
+                    const selectedColor = colors.find((c) => c.name === value);
+                    if (selectedColor) {
+                      setFilament({
+                        ...filament,
+                        color: selectedColor,
+                      });
+                      setHasChanges(true);
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select color" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {colors.map((color) => (
+                      <SelectItem key={color.name} value={color.name}>
+                        <div className="flex items-center">
+                          <div
+                            className="w-4 h-4 rounded-full mr-2"
+                            style={{ backgroundColor: color.hex }}
+                          />
+                          {color.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
@@ -358,12 +386,6 @@ export default function FilamentDetail({
         <div className="fixed inset-0 bg-white z-50 flex items-center justify-center print:bg-transparent">
           <div className="text-center">
             <FilamentQRCode {...filament} />
-            <p className="mt-4 text-lg font-semibold">
-              Filament #{filament.id}
-            </p>
-            <p>
-              {filament.brand} - {filament.material} - {filament.color}
-            </p>
           </div>
         </div>
       )}
