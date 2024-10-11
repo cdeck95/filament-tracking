@@ -35,6 +35,19 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 
 export default function Home() {
   const [filaments, setFilaments] = useState<Filament[]>([]);
@@ -69,14 +82,6 @@ export default function Home() {
       setIsLoading(false);
     }
   };
-
-  const filteredFilaments = filaments.filter((filament) =>
-    Object.values(filament).some(
-      (value) =>
-        value &&
-        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
 
   const handleAddFilament = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,9 +123,70 @@ export default function Home() {
     router.push(`/filament/${id}`);
   };
 
+  const filteredFilaments = filaments.filter((filament) =>
+    Object.values(filament).some(
+      (value) =>
+        value &&
+        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
+
+  // Transforming the `filaments` array to meet the requirement of having string `id` values
+  const transformedFilaments = filteredFilaments.map((filament) => ({
+    ...filament,
+    id: filament.id.toString(), // Convert id from number to string
+    label: `${filament.brand} ${filament.material} ${filament.color}`, // Create the concatenated label
+  }));
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6 text-center">Filament Tracker</h1>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Filament Stock Overview</CardTitle>
+          <CardDescription>
+            Visual representation of your current filament stock
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer
+            config={{
+              weight: {
+                label: "Weight (g)",
+                color: "hsl(var(--chart-1))",
+              },
+            }}
+            className="max-h-[350px]"
+          >
+            <BarChart
+              data={transformedFilaments} // Use transformed filaments with string id
+              layout="vertical" // Set layout to vertical
+              margin={{ top: 10, right: 10, bottom: 10, left: 20 }}
+            >
+              <CartesianGrid horizontal={false} />
+              <XAxis
+                type="number"
+                label={{
+                  value: "Weight (g)",
+                  position: "insideBottom",
+                  offset: -5,
+                }}
+                domain={[0, 1100]} // Set range from 0 to 1100g
+              />
+              <YAxis
+                type="category"
+                dataKey="label" // Using the new concatenated label for y-axis
+                tick={{ fontSize: 12 }}
+                tickMargin={10}
+                interval={0} // Show all labels
+                textAnchor="end"
+              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="weight" fill="var(--color-weight)" />
+            </BarChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
 
       <div className="mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
         <Input

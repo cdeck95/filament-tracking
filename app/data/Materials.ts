@@ -1,3 +1,3 @@
-const materials: string[] = ["PLA", "PETG", "TPU", "ASA"];
+const materials: string[] = ["PLA", "PETG", "PETG-HF", "TPU", "ASA"];
 
 export default materials;
