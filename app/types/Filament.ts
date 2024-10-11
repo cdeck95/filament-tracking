@@ -3,5 +3,5 @@ export type Filament = {
   brand: string;
   material: string;
   color: string;
-  weight: number;
+  weight: number | null;
 };

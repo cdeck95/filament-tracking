@@ -24,18 +24,20 @@ import FilamentQRCode from "@/app/components/QRCode";
 import brands from "@/app/data/Brands";
 import materials from "@/app/data/Materials";
 import { toast } from "@/hooks/use-toast";
-
-// Simulating data fetch and update to Vercel Blob storage
-const fetchFilamentById = async (id: number) => {
-  // In a real app, this would be an API call to fetch data from Vercel Blob storage
-  return {
-    id,
-    brand: "Prusament",
-    material: "PLA",
-    color: "Galaxy Black",
-    weight: 850,
-  };
-};
+import Link from "next/link";
+import { ArrowLeft, Loader2, Trash } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useRouter } from "next/navigation";
 
 export default function FilamentDetail({
   params,
@@ -43,9 +45,11 @@ export default function FilamentDetail({
   params: { filament_id: string };
 }) {
   const filament_id = params.filament_id;
+  console.log("filament_id", filament_id);
   const id = Array.isArray(filament_id)
     ? parseInt(filament_id[0] ?? "0", 10)
     : parseInt(filament_id ?? "0", 10);
+  console.log("id", id);
   const [filament, setFilament] = useState<Filament>({
     id: 0,
     brand: "",
@@ -55,31 +59,101 @@ export default function FilamentDetail({
   });
   const [showQR, setShowQR] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (id) {
-      fetchFilamentById(id).then(setFilament);
+      fetchFilamentById(id);
     }
   }, [id]);
 
+  const fetchFilamentById = async (id: number) => {
+    try {
+      const response = await fetch(`/api/filaments/${id}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch filament");
+      }
+      const data = await response.json();
+      // Use the filament data here
+      console.log(data);
+      setFilament(data);
+    } catch (error) {
+      console.error("Error fetching filament:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("handleChange", e.target.name, e.target.value);
     setFilament({ ...filament, [e.target.name]: e.target.value });
     setHasChanges(true);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    setIsSubmitting(true);
     e.preventDefault();
-    updateFilament(filament);
+    if (!filament) return;
+
+    try {
+      const response = await fetch(`/api/filaments/${params.filament_id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(filament),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update filament");
+      }
+      toast({
+        title: "Success",
+        description: `Filament #${filament.id} updated successfully`,
+        variant: "default",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Error updating filament:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update filament",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsSubmitting(false);
+      setHasChanges(false);
+    }
   };
 
-  const updateFilament = async (filament: Filament) => {
-    if (!filament.id) return;
-    toast({
-      title: "Success",
-      description: `Filament #${filament.id} updated successfully`,
-      variant: "default",
-      duration: 3000,
-    });
+  const deleteFilament = async () => {
+    if (!filament) return;
+
+    try {
+      const response = await fetch(`/api/filaments/${params.filament_id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete filament");
+      }
+      toast({
+        title: "Success",
+        description: `Filament #${filament.id} deleted successfully`,
+        variant: "default",
+        duration: 3000,
+      });
+      router.push("/");
+    } catch (error) {
+      console.error("Error deleting filament:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete filament",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
   };
 
   const handlePrintQR = () => {
@@ -97,124 +171,189 @@ export default function FilamentDetail({
   if (!filament) return <div>Loading...</div>;
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 relative">
+      <div className="mb-4">
+        <Link
+          href="/"
+          className="inline-flex items-center text-sm font-medium text-primary hover:underline"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Home
+        </Link>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button
+              // onClick={deleteFilament}
+              variant="destructive"
+              className="absolute top-2 right-4"
+            >
+              <Trash className="m-0 p-0 h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-[90%]">
+            <DialogHeader>
+              <DialogTitle>Confirm Delete</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this filament?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex flex-row justify-between">
+              <DialogClose>
+                <Button variant="destructive" onClick={deleteFilament}>
+                  Delete
+                </Button>
+              </DialogClose>
+              <DialogClose>
+                <Button variant="outline">Cancel</Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>Edit Filament #{filament.id}</CardTitle>
           <CardDescription>
-            Update the details of your filament roll.{" "}
-            <strong>Changes are saved automatically.</strong>
+            Update the details of your filament roll.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="id">ID</Label>
-              <Input id="id" value={filament.id} readOnly disabled />
-            </div>
-
-            <div>
-              <Label htmlFor="brand">Brand</Label>
-              <Select
-                name="brand"
-                value={filament.brand}
-                onValueChange={(value) =>
-                  setFilament({ ...filament, brand: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select brand" />
-                </SelectTrigger>
-                <SelectContent>
-                  {brands.map((brand) => (
-                    <SelectItem key={brand} value={brand}>
-                      {brand}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="material">Material</Label>
-              <Select
-                name="material"
-                value={filament.material}
-                onValueChange={(value) =>
-                  setFilament({ ...filament, material: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select material" />
-                </SelectTrigger>
-                <SelectContent>
-                  {materials.map((material) => (
-                    <SelectItem key={material} value={material}>
-                      {material}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="color">Color</Label>
-              <Input
-                id="color"
-                name="color"
-                value={filament.color}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="weight">Weight (g)</Label>
+          {loading ? (
+            <div className="space-y-4">
+              <Skeleton className="w-full h-10" /> {/* ID */}
+              <Skeleton className="w-full h-10" /> {/* Brand */}
+              <Skeleton className="w-full h-10" /> {/* Material */}
+              <Skeleton className="w-full h-10" /> {/* Color */}
               <div className="flex items-center space-x-4">
-                <Input
-                  id="weight"
-                  name="weight"
-                  type="number"
-                  value={filament.weight}
-                  onChange={handleChange}
-                  className="w-24"
-                />
-                <Slider
-                  value={[filament.weight]}
-                  onValueChange={(value) =>
-                    setFilament({ ...filament, weight: value[0] })
-                  }
-                  max={1000}
-                  step={1}
-                  className="flex-grow"
-                />
+                <Skeleton className="w-24 h-10" /> {/* Weight Input */}
+                <Skeleton className="flex-grow h-10" /> {/* Weight Slider */}
+              </div>
+              <div className="flex flex-row gap-4 justify-start items-center">
+                <Skeleton className="w-32 h-10" /> {/* Print QR Code Button */}
+                <Skeleton className="w-32 h-10" /> {/* Show QR Code Button */}
               </div>
             </div>
-            <div className="flex flex-row gap-4 justify-start items-center">
-              <Button
-                type="button"
-                variant="default"
-                className="mt-2"
-                onClick={handlePrintQR}
-              >
-                Print QR Code
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={showQRCode}
-                className="mt-2"
-              >
-                Show QR Code
-              </Button>
-              {hasChanges && (
-                <Button type="submit" className="mt-2">
-                  Save Changes
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="id">ID</Label>
+                <Input id="id" value={filament.id} readOnly disabled />
+              </div>
+
+              <div>
+                <Label htmlFor="brand">Brand</Label>
+                <Select
+                  name="brand"
+                  value={filament.brand}
+                  onValueChange={(value) =>
+                    setFilament({ ...filament, brand: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select brand" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brands.map((brand) => (
+                      <SelectItem key={brand} value={brand}>
+                        {brand}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="material">Material</Label>
+                <Select
+                  name="material"
+                  value={filament.material}
+                  onValueChange={(value) =>
+                    setFilament({ ...filament, material: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select material" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {materials.map((material) => (
+                      <SelectItem key={material} value={material}>
+                        {material}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="color">Color</Label>
+                <Input
+                  id="color"
+                  name="color"
+                  value={filament.color}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="weight">Weight (g)</Label>
+                <div className="flex items-center space-x-4">
+                  <Input
+                    id="weight"
+                    name="weight"
+                    type="number"
+                    value={filament.weight}
+                    onChange={handleChange}
+                    className="w-24"
+                  />
+                  <Slider
+                    value={[filament.weight]}
+                    onValueChange={(value) => {
+                      setFilament({ ...filament, weight: value[0] });
+                      setHasChanges(true);
+                    }}
+                    max={1000}
+                    step={1}
+                    className="flex-grow"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-row gap-4 justify-start items-center">
+                <Button
+                  type="button"
+                  variant="default"
+                  className="mt-2"
+                  onClick={handlePrintQR}
+                >
+                  Print QR Code
                 </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={showQRCode}
+                  className="mt-2"
+                >
+                  Show QR Code
+                </Button>
+              </div>
+              {hasChanges && (
+                <div className="fixed bottom-0 left-0 right-0 border-t border-border p-4 flex justify-center items-center">
+                  <Button type="submit" onClick={() => handleSubmit}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Label>Please wait</Label>
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </Button>
+                </div>
               )}
-            </div>
-          </form>
+            </form>
+          )}
         </CardContent>
       </Card>
+
       {showQR && (
         <div className="fixed inset-0 bg-white z-50 flex items-center justify-center print:bg-transparent">
           <div className="text-center">

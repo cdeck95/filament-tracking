@@ -31,6 +31,10 @@ import {
 } from "@/components/ui/dialog";
 import brands from "./data/Brands";
 import materials from "./data/Materials";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [filaments, setFilaments] = useState<Filament[]>([]);
@@ -40,8 +44,11 @@ export default function Home() {
     brand: "",
     material: "",
     color: "",
-    weight: 0,
+    weight: null,
   });
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     fetchFilaments();
@@ -49,6 +56,7 @@ export default function Home() {
 
   const fetchFilaments = async () => {
     try {
+      setIsLoading(true);
       const response = await fetch("/api/filaments");
       if (!response.ok) {
         throw new Error("Failed to fetch filaments");
@@ -57,17 +65,22 @@ export default function Home() {
       setFilaments(data);
     } catch (error) {
       console.error("Error fetching filaments:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const filteredFilaments = filaments.filter((filament) =>
-    Object.values(filament).some((value) =>
-      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    Object.values(filament).some(
+      (value) =>
+        value &&
+        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
 
   const handleAddFilament = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       const response = await fetch("/api/filaments", {
         method: "POST",
@@ -82,9 +95,27 @@ export default function Home() {
       setIsAddDialogOpen(false);
       setNewFilament({ brand: "", material: "", color: "", weight: 0 });
       fetchFilaments();
+      toast({
+        title: "Success",
+        description: "Filament added successfully",
+        variant: "default",
+        duration: 3000,
+      });
     } catch (error) {
       console.error("Error adding filament:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add filament",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const goToFilament = (id: number) => () => {
+    router.push(`/filament/${id}`);
   };
 
   return (
@@ -169,7 +200,7 @@ export default function Home() {
                   id="weight"
                   type="number"
                   placeholder="Enter weight"
-                  value={newFilament.weight}
+                  value={newFilament.weight || ""}
                   onChange={(e) =>
                     setNewFilament({
                       ...newFilament,
@@ -178,7 +209,16 @@ export default function Home() {
                   }
                 />
               </div>
-              <Button type="submit">Add Filament</Button>
+              <Button type="submit">
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Label>Please wait</Label>
+                  </>
+                ) : (
+                  "Add Filament"
+                )}
+              </Button>
             </form>
           </DialogContent>
         </Dialog>
@@ -196,17 +236,38 @@ export default function Home() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredFilaments.map((filament) => (
-              <TableRow key={filament.id}>
-                <TableCell>
-                  <Link href={`/filament/${filament.id}`}>{filament.id}</Link>
-                </TableCell>
-                <TableCell>{filament.brand}</TableCell>
-                <TableCell>{filament.material}</TableCell>
-                <TableCell>{filament.color}</TableCell>
-                <TableCell>{filament.weight}</TableCell>
-              </TableRow>
-            ))}
+            {isLoading
+              ? Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <Skeleton className="w-full h-6" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="w-full h-6" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="w-full h-6" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="w-full h-6" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="w-full h-6" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              : filteredFilaments.map((filament) => (
+                  <TableRow
+                    key={filament.id}
+                    onClick={goToFilament(filament.id)}
+                  >
+                    <TableCell>{filament.id}</TableCell>
+                    <TableCell>{filament.brand}</TableCell>
+                    <TableCell>{filament.material}</TableCell>
+                    <TableCell>{filament.color}</TableCell>
+                    <TableCell>{filament.weight}</TableCell>
+                  </TableRow>
+                ))}
           </TableBody>
         </Table>
       </div>
