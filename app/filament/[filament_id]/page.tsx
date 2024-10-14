@@ -38,7 +38,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
-import { colors } from "@/app/types/Colors";
+import { colors } from "@/app/data/Colors";
 
 export default function FilamentDetail({
   params,

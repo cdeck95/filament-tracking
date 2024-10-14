@@ -61,6 +61,7 @@ import {
   VisibilityState,
   flexRender,
   getCoreRowModel,
+  getFacetedUniqueValues,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
@@ -74,9 +75,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
 import { DataTableColumnHeader } from "./components/data-table-column-header";
-import { colors } from "./types/Colors";
+import { colors } from "./data/Colors";
 import { DataTablePagination } from "./components/data-table-pagination";
 import { format } from "date-fns";
+import { DataTableToolbar } from "./components/data-table-toolbar";
+import { Color } from "./types/Color";
 
 const columns: ColumnDef<Filament>[] = [
   {
@@ -92,6 +95,13 @@ const columns: ColumnDef<Filament>[] = [
       <DataTableColumnHeader column={column} title="Brand" />
     ),
     cell: ({ row }) => <div>{row.getValue("brand")}</div>,
+    filterFn: (row, id, value) => {
+      // console.log("Filtering:", {
+      //   rowValue: row.getValue(id),
+      //   filterValue: value,
+      // });
+      return value.includes(row.getValue(id));
+    },
   },
   {
     accessorKey: "material",
@@ -99,6 +109,13 @@ const columns: ColumnDef<Filament>[] = [
       <DataTableColumnHeader column={column} title="Material" />
     ),
     cell: ({ row }) => <div>{row.getValue("material")}</div>,
+    filterFn: (row, id, value) => {
+      // console.log("Filtering:", {
+      //   rowValue: row.getValue(id),
+      //   filterValue: value,
+      // });
+      return value.includes(row.getValue(id));
+    },
   },
   {
     accessorKey: "color",
@@ -116,6 +133,10 @@ const columns: ColumnDef<Filament>[] = [
         {(row.getValue("color") as { name: string }).name}
       </div>
     ),
+    filterFn: (row, id, value) => {
+      const colorName = (row.getValue(id) as Color).name;
+      return value.includes(colorName); // Filter based on color name
+    },
   },
   {
     accessorKey: "weight",
@@ -176,6 +197,7 @@ export default function Home() {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
+    getFacetedUniqueValues: getFacetedUniqueValues(), // Add this line
     onRowSelectionChange: setRowSelection,
     globalFilterFn: (row, columnId, filterValue) => {
       const value = row.getValue(columnId);
@@ -289,12 +311,32 @@ export default function Home() {
   }, [filteredFilaments]);
 
   const transformedFilaments = useMemo(() => {
-    return combinedFilaments.map((filament) => ({
+    // Use filtered rows from the table instead of the raw data
+    const filteredData = table
+      .getFilteredRowModel()
+      .rows.map((row) => row.original);
+
+    const combined: { [key: string]: Filament & { totalWeight: number } } = {};
+
+    filteredData.forEach((filament) => {
+      const key = `${filament.brand}-${filament.material}-${filament.color.name}`;
+      const weightAsNumber = filament.weight
+        ? parseFloat(filament.weight.toString())
+        : 0;
+
+      if (combined[key]) {
+        combined[key].totalWeight += weightAsNumber;
+      } else {
+        combined[key] = { ...filament, totalWeight: weightAsNumber };
+      }
+    });
+
+    return Object.values(combined).map((filament) => ({
       id: filament.id,
       label: `${filament.brand} ${filament.material} ${filament.color.name}`,
       weight: filament.totalWeight,
     }));
-  }, [combinedFilaments]);
+  }, [table.getFilteredRowModel().rows]);
 
   return (
     <div className="container mx-auto p-4">
@@ -478,7 +520,7 @@ export default function Home() {
         </Dialog>
       </div>
       <div className="space-y-4">
-        <div className="flex items-center py-4">
+        {/* <div className="flex items-center py-4">
           <Input
             placeholder="Search brands, colors, materials..."
             value={globalFilter}
@@ -514,7 +556,16 @@ export default function Home() {
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
+        </div> */}
+        {!isLoading && (
+          <DataTableToolbar
+            table={table}
+            globalFilter={globalFilter}
+            setGlobalFilter={setGlobalFilter}
+            setSearchTerm={setSearchTerm}
+          />
+        )}
+
         <div className="rounded-md border">
           <Table>
             <TableHeader>
