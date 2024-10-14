@@ -345,6 +345,32 @@ export default function FilamentDetail({
                   />
                 </div>
               </div>
+              <div>
+                <Label htmlFor="created_at">Created At</Label>
+                <Input
+                  id="created_at"
+                  value={
+                    filament.createdAt
+                      ? new Date(filament.createdAt).toLocaleString()
+                      : ""
+                  }
+                  readOnly
+                  disabled
+                />
+              </div>
+              <div>
+                <Label htmlFor="updated_at">Updated At</Label>
+                <Input
+                  id="updated_at"
+                  value={
+                    filament.updatedAt
+                      ? new Date(filament.updatedAt).toLocaleString()
+                      : ""
+                  }
+                  readOnly
+                  disabled
+                />
+              </div>
               <div className="flex flex-row gap-4 justify-start items-center">
                 <Button
                   type="button"

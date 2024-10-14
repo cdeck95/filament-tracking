@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -73,10 +72,11 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { DataTableColumnHeader } from "./components/data-table-column-header";
 import { colors } from "./types/Colors";
 import { DataTablePagination } from "./components/data-table-pagination";
+import { format } from "date-fns";
 
 const columns: ColumnDef<Filament>[] = [
   {
@@ -123,6 +123,24 @@ const columns: ColumnDef<Filament>[] = [
       <DataTableColumnHeader column={column} title="Weight" />
     ),
     cell: ({ row }) => <div>{row.getValue("weight")}</div>,
+  },
+  // {
+  //   accessorKey: "createdAt",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="Created At" />
+  //   ),
+  //   cell: ({ row }) => <div>{row.getValue("createdAt")}</div>,
+  // },
+  {
+    accessorKey: "updatedAt",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Updated At" />
+    ),
+    cell: ({ row }) => {
+      const date = new Date(row.getValue("updatedAt"));
+      const formattedDate = format(date, "MM/dd/yyyy h:mm a");
+      return <div>{formattedDate}</div>;
+    },
   },
 ];
 

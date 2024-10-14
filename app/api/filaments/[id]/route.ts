@@ -15,7 +15,18 @@ async function getFilaments(): Promise<Filament[]> {
   const blobUrl = filamentsBlob.url;
   const cacheBustingUrl = `${blobUrl}?timestamp=${Date.now()}`;
   const response = await fetch(cacheBustingUrl, { cache: "no-store" });
-  return await response.json();
+  const filaments = (await response.json()) as Filament[];
+
+  const today = new Date();
+
+  // Check for missing createdAt and updatedAt fields and update them
+  const updatedFilaments = filaments.map((filament) => ({
+    ...filament,
+    createdAt: filament.createdAt || today, // Set createdAt if not present
+    updatedAt: filament.updatedAt || today, // Set updatedAt if not present
+  }));
+
+  return updatedFilaments;
 }
 
 async function saveFilaments(filaments: Filament[]): Promise<void> {
@@ -73,7 +84,13 @@ export async function PUT(
       );
     }
 
-    filaments[index] = { ...filaments[index], ...updatedFilament };
+    // Update the filament and set updatedAt to the current date and time
+    filaments[index] = {
+      ...filaments[index],
+      ...updatedFilament,
+      updatedAt: new Date(), // Set updatedAt to the current date and time
+    };
+
     await saveFilaments(filaments);
 
     return NextResponse.json(filaments[index]);

@@ -7,4 +7,6 @@ export type Filament = {
     hex: string;
   };
   weight: number | null;
+  createdAt?: Date; //new fields
+  updatedAt?: Date; //new fields
 };
