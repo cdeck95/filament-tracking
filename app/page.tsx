@@ -145,6 +145,13 @@ const columns: ColumnDef<Filament>[] = [
     ),
     cell: ({ row }) => <div>{row.getValue("weight")}</div>,
   },
+  {
+    accessorKey: "location",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Location" />
+    ),
+    cell: ({ row }) => <div>{row.getValue("location")}</div>,
+  },
   // {
   //   accessorKey: "createdAt",
   //   header: ({ column }) => (

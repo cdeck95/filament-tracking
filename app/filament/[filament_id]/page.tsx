@@ -345,6 +345,17 @@ export default function FilamentDetail({
                   />
                 </div>
               </div>
+
+              <div>
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  name="location"
+                  value={filament.location || ""}
+                  onChange={handleChange}
+                />
+              </div>
+
               <div>
                 <Label htmlFor="created_at">Created At</Label>
                 <Input
