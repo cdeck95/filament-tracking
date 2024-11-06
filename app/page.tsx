@@ -31,7 +31,7 @@ import {
 import brands from "./data/Brands";
 import materials from "./data/Materials";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, MoreHorizontal, Pencil, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -71,6 +71,9 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
@@ -80,97 +83,7 @@ import { DataTablePagination } from "./components/data-table-pagination";
 import { format } from "date-fns";
 import { DataTableToolbar } from "./components/data-table-toolbar";
 import { Color } from "./types/Color";
-
-const columns: ColumnDef<Filament>[] = [
-  {
-    accessorKey: "id",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="ID" />
-    ),
-    cell: ({ row }) => <div>{row.getValue("id")}</div>,
-  },
-  {
-    accessorKey: "brand",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Brand" />
-    ),
-    cell: ({ row }) => <div>{row.getValue("brand")}</div>,
-    filterFn: (row, id, value) => {
-      // console.log("Filtering:", {
-      //   rowValue: row.getValue(id),
-      //   filterValue: value,
-      // });
-      return value.includes(row.getValue(id));
-    },
-  },
-  {
-    accessorKey: "material",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Material" />
-    ),
-    cell: ({ row }) => <div>{row.getValue("material")}</div>,
-    filterFn: (row, id, value) => {
-      // console.log("Filtering:", {
-      //   rowValue: row.getValue(id),
-      //   filterValue: value,
-      // });
-      return value.includes(row.getValue(id));
-    },
-  },
-  {
-    accessorKey: "color",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Color" />
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center">
-        <div
-          className="w-4 h-4 rounded-full mr-2"
-          style={{
-            backgroundColor: (row.getValue("color") as { hex: string }).hex,
-          }}
-        />
-        {(row.getValue("color") as { name: string }).name}
-      </div>
-    ),
-    filterFn: (row, id, value) => {
-      const colorName = (row.getValue(id) as Color).name;
-      return value.includes(colorName); // Filter based on color name
-    },
-  },
-  {
-    accessorKey: "weight",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Weight" />
-    ),
-    cell: ({ row }) => <div>{row.getValue("weight")}</div>,
-  },
-  {
-    accessorKey: "location",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Location" />
-    ),
-    cell: ({ row }) => <div>{row.getValue("location")}</div>,
-  },
-  // {
-  //   accessorKey: "createdAt",
-  //   header: ({ column }) => (
-  //     <DataTableColumnHeader column={column} title="Created At" />
-  //   ),
-  //   cell: ({ row }) => <div>{row.getValue("createdAt")}</div>,
-  // },
-  {
-    accessorKey: "updatedAt",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Updated At" />
-    ),
-    cell: ({ row }) => {
-      const date = new Date(row.getValue("updatedAt"));
-      const formattedDate = format(date, "MM/dd/yyyy h:mm a");
-      return <div>{formattedDate}</div>;
-    },
-  },
-];
+import { revalidatePath } from "next/cache";
 
 export default function Home() {
   const [filaments, setFilaments] = useState<Filament[]>([]);
@@ -185,7 +98,6 @@ export default function Home() {
     },
     weight: null,
   });
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -193,6 +105,168 @@ export default function Home() {
   const [rowSelection, setRowSelection] = useState({});
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+
+  const columns: ColumnDef<Filament>[] = [
+    {
+      accessorKey: "id",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="ID" />
+      ),
+      cell: ({ row }) => <div>{row.getValue("id")}</div>,
+    },
+    {
+      accessorKey: "brand",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Brand" />
+      ),
+      cell: ({ row }) => <div>{row.getValue("brand")}</div>,
+      filterFn: (row, id, value) => {
+        // console.log("Filtering:", {
+        //   rowValue: row.getValue(id),
+        //   filterValue: value,
+        // });
+        return value.includes(row.getValue(id));
+      },
+    },
+    {
+      accessorKey: "material",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Material" />
+      ),
+      cell: ({ row }) => <div>{row.getValue("material")}</div>,
+      filterFn: (row, id, value) => {
+        // console.log("Filtering:", {
+        //   rowValue: row.getValue(id),
+        //   filterValue: value,
+        // });
+        return value.includes(row.getValue(id));
+      },
+    },
+    {
+      accessorKey: "color",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Color" />
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center">
+          <div
+            className="w-4 h-4 rounded-full mr-2"
+            style={{
+              backgroundColor: (row.getValue("color") as { hex: string }).hex,
+            }}
+          />
+          {(row.getValue("color") as { name: string }).name}
+        </div>
+      ),
+      filterFn: (row, id, value) => {
+        const colorName = (row.getValue(id) as Color).name;
+        return value.includes(colorName); // Filter based on color name
+      },
+    },
+    {
+      accessorKey: "weight",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Weight" />
+      ),
+      cell: ({ row }) => <div>{row.getValue("weight")}</div>,
+    },
+    {
+      accessorKey: "location",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Location" />
+      ),
+      cell: ({ row }) => <div>{row.getValue("location")}</div>,
+    },
+    // {
+    //   accessorKey: "createdAt",
+    //   header: ({ column }) => (
+    //     <DataTableColumnHeader column={column} title="Created At" />
+    //   ),
+    //   cell: ({ row }) => <div>{row.getValue("createdAt")}</div>,
+    // },
+    {
+      accessorKey: "updatedAt",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Updated At" />
+      ),
+      cell: ({ row }) => {
+        const date = new Date(row.getValue("updatedAt"));
+        const formattedDate = format(date, "MM/dd/yyyy h:mm a");
+        return <div>{formattedDate}</div>;
+      },
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const filament = row.original;
+        const router = useRouter();
+
+        const goToFilament = (id: number) => () => {
+          router.push(`/filament/${id}`);
+        };
+
+        const emptyFilament = () => {
+          console.log("Marking filament as empty:", filament);
+          const newFilament = { ...filament, weight: 0 };
+          fetch(`/api/filaments/${filament.id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(newFilament),
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error("Failed to mark filament as empty");
+              }
+              return response.json();
+            })
+            .then(() => {
+              fetchFilaments();
+              toast({
+                title: "Success",
+                description: "Filament marked as empty",
+                variant: "default",
+                duration: 3000,
+              });
+            })
+            .catch((error) => {
+              console.error("Error marking filament as empty:", error);
+              toast({
+                title: "Error",
+                description: "Failed to mark filament as empty",
+                variant: "destructive",
+                duration: 3000,
+              });
+            });
+        };
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={goToFilament(row.original.id)}>
+                <Pencil className="h-4 w-4 mr-2" />{" "}
+                <Label className="text-xs">Edit</Label>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={emptyFilament}>
+                <X className="h-4 w-4 mr-2" />{" "}
+                <Label className="text-xs">Mark as empty</Label>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
 
   const table = useReactTable({
     data: filaments,
@@ -287,10 +361,6 @@ export default function Home() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const goToFilament = (id: number) => () => {
-    router.push(`/filament/${id}`);
   };
 
   const filteredFilaments = filaments.filter((filament) =>
@@ -609,8 +679,6 @@ export default function Home() {
                   <TableRow
                     key={row.id}
                     // data-state={row.getIsSelected() && "selected"}
-                    onClick={goToFilament(row.original.id)}
-                    className="cursor-pointer"
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
