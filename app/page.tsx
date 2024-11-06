@@ -105,6 +105,7 @@ export default function Home() {
   const [rowSelection, setRowSelection] = useState({});
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const router = useRouter();
 
   const columns: ColumnDef<Filament>[] = [
     {
@@ -200,7 +201,6 @@ export default function Home() {
       enableHiding: false,
       cell: ({ row }) => {
         const filament = row.original;
-        const router = useRouter();
 
         const goToFilament = (id: number) => () => {
           router.push(`/filament/${id}`);
