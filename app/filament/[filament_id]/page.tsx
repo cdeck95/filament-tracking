@@ -249,9 +249,10 @@ export default function FilamentDetail({
                 <Select
                   name="brand"
                   value={filament.brand}
-                  onValueChange={(value) =>
-                    setFilament({ ...filament, brand: value })
-                  }
+                  onValueChange={(value) => {
+                    setFilament({ ...filament, brand: value });
+                    setHasChanges(true);
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select brand" />
@@ -271,9 +272,10 @@ export default function FilamentDetail({
                 <Select
                   name="material"
                   value={filament.material}
-                  onValueChange={(value) =>
-                    setFilament({ ...filament, material: value })
-                  }
+                  onValueChange={(value) => {
+                    setFilament({ ...filament, material: value });
+                    setHasChanges(true);
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select material" />
