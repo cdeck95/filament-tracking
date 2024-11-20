@@ -103,7 +103,6 @@ export default function Home() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
-  const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const router = useRouter();
 
@@ -267,6 +266,15 @@ export default function Home() {
       },
     },
   ];
+
+  const initialSorting: SortingState = [
+    {
+      id: "updatedAt",
+      desc: true,
+    },
+  ];
+
+  const [sorting, setSorting] = useState<SortingState>(initialSorting);
 
   const table = useReactTable({
     data: filaments,
