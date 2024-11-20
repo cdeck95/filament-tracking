@@ -299,6 +299,8 @@ export default function Home() {
     onGlobalFilterChange: setGlobalFilter,
   });
 
+  table.getState().pagination.pageSize = 50;
+
   useEffect(() => {
     fetchFilaments();
   }, []);
