@@ -33,4 +33,7 @@ export const colors = [
   { name: "Turquoise", hex: "#40E0D0" },
   { name: "White", hex: "#FFFFFF" },
   { name: "Yellow", hex: "#FFFF00" },
+  { name: "Blue TPU", hex: "#0074D9" },
+  { name: "Neon Green TPU", hex: "#01FF70" },
+  { name: "Black TPU", hex: "#111111" },
 ];
