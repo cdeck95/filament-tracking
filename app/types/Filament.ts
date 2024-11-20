@@ -9,4 +9,5 @@ export type Filament = {
   location?: string;
   createdAt?: Date; //new fields
   updatedAt?: Date; //new fields
+  startingWeight?: number; //new fields
 };

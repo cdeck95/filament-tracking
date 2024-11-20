@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { colors } from "@/app/data/Colors";
+import { set } from "date-fns";
 
 export default function FilamentDetail({
   params,
@@ -60,6 +61,10 @@ export default function FilamentDetail({
       hex: "",
     },
     weight: 0,
+    startingWeight: 0,
+    location: "",
+    createdAt: new Date(),
+    updatedAt: new Date(),
   });
   const [showQR, setShowQR] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -132,6 +137,38 @@ export default function FilamentDetail({
     }
   };
 
+  const saveStartingWeight = async (newFilament: Filament) => {
+    if (!newFilament) return;
+
+    try {
+      const response = await fetch(`/api/filaments/${params.filament_id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newFilament),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update filament");
+      }
+      // toast({
+      //   title: "Success",
+      //   description: `Filament #${filament.id} updated successfully`,
+      //   variant: "default",
+      //   duration: 3000,
+      // });
+      setHasChanges(false);
+    } catch (error) {
+      console.error("Error updating filament:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update filament",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+
   const deleteFilament = async () => {
     if (!filament) return;
 
@@ -171,6 +208,16 @@ export default function FilamentDetail({
   const showQRCode = () => {
     setShowQR(true);
   };
+
+  useEffect(() => {
+    if (loading) return;
+    if (!filament.startingWeight && filament.weight) {
+      const newFilament = { ...filament, startingWeight: filament.weight };
+      setFilament(newFilament);
+      setHasChanges(true);
+      saveStartingWeight(newFilament);
+    }
+  }, [filament, loading]);
 
   if (!filament) return <div>Loading...</div>;
 
@@ -339,6 +386,30 @@ export default function FilamentDetail({
                     value={[filament.weight || 0]}
                     onValueChange={(value) => {
                       setFilament({ ...filament, weight: value[0] });
+                      setHasChanges(true);
+                    }}
+                    max={1000}
+                    step={1}
+                    className="flex-grow"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="startingWeight">Starting Weight (g)</Label>
+                <div className="flex items-center space-x-4">
+                  <Input
+                    id="startingWeight"
+                    name="startingWeight"
+                    type="number"
+                    value={filament.startingWeight || ""}
+                    onChange={handleChange}
+                    className="w-24"
+                  />
+                  <Slider
+                    value={[filament.startingWeight || 0]}
+                    onValueChange={(value) => {
+                      setFilament({ ...filament, startingWeight: value[0] });
                       setHasChanges(true);
                     }}
                     max={1000}
