@@ -592,6 +592,22 @@ export default function Home() {
                   }
                 />
               </div>
+              <div>
+                <Label htmlFor="weight">Starting Weight (g)</Label>
+                <Input
+                  id="startingWeight"
+                  type="number"
+                  placeholder="Enter starting weight"
+                  value={newFilament.weight || ""}
+                  onChange={(e) =>
+                    setNewFilament({
+                      ...newFilament,
+                      startingWeight: Number(e.target.value),
+                    })
+                  }
+                  readOnly
+                />
+              </div>
               <Button type="submit">
                 {isSubmitting ? (
                   <>
