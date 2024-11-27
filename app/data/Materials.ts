@@ -6,6 +6,8 @@ const materials: string[] = [
   "ASA",
   "TPU for AMS",
   "PLA Matte",
+  "PLA-CF",
+  "PETG Translucent",
 ];
 
 export default materials;

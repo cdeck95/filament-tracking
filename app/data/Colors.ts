@@ -36,4 +36,10 @@ export const colors = [
   { name: "Blue TPU", hex: "#0074D9" },
   { name: "Neon Green TPU", hex: "#01FF70" },
   { name: "Black TPU", hex: "#111111" },
+
+  // new colors
+  { name: "Matte Dark Red", hex: "#8B0000" },
+  { name: "Matte Lilac Purple", hex: "#800080" },
+  { name: "Clear", hex: "#FFFFFF" },
+  { name: "Burgundy Red", hex: "#800020" },
 ];
