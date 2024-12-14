@@ -38,23 +38,22 @@ const updates: ChangeLogEntry[] = [
     changes: ["Added new colors, brands, and materials"],
   },
   {
-    version: "1.1.0",
+    version: "1.0.2",
     date: "2024-11-20",
     changes: [
-      "Added Change Log page to track version history",
       "Changed default rows per page to 50",
       "Set default filament order to descending based on 'updatedAt'",
       "Added starting weight and current weight tracking for each filament",
     ],
   },
   {
-    version: "1.1.1",
+    version: "1.0.3",
     date: "2024-11-27",
     changes: ["Added new colors, brands, and materials"],
   },
 
   {
-    version: "1.2.0",
+    version: "1.1.0",
     date: "2024-12-14",
     changes: [
       "Clicking anywhere in the row now opens the edit filament page",
@@ -63,6 +62,7 @@ const updates: ChangeLogEntry[] = [
       "Added a 'notes' field to the filament object",
       "Added the 'notes' column to the filament table",
       "Added a toggle to auto-open the QR code after adding a filament",
+      "Added Change Log page to track version history",
     ],
   },
 ];
