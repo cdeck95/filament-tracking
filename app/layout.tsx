@@ -4,6 +4,8 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
 import { ModeToggle } from "@/components/ui/modetoggle";
+import Link from "next/link";
+import { VersionBanner } from "./components/version-banner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -29,6 +31,7 @@ export default function RootLayout({
           <div className="fixed top-4 left-4 z-50">
             <ModeToggle />
           </div>
+          <VersionBanner />
           <div className="mt-[10px]">{children}</div>
           <Toaster />
         </ThemeProvider>
