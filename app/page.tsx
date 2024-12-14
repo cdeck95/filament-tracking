@@ -110,7 +110,7 @@ export default function Home() {
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
   const router = useRouter();
-  const [showQRCode, setShowQRCode] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(true);
 
   const deleteFilament = async (filament: Filament) => {
     if (!filament) return;
@@ -476,7 +476,9 @@ export default function Home() {
         variant: "default",
         duration: 3000,
       });
-      router.push(`/filament/${filamentToAdd.id}?showQR=${showQRCode}`);
+      if (showQRCode) {
+        router.push(`/filament/${filamentToAdd.id}?showQR=${showQRCode}`);
+      }
     } catch (error) {
       console.error("Error adding filament:", error);
       toast({
@@ -756,7 +758,7 @@ export default function Home() {
                 <Switch
                   id="show-qr-code"
                   checked={showQRCode}
-                  onChange={() => setShowQRCode(!showQRCode)}
+                  onCheckedChange={() => setShowQRCode(!showQRCode)}
                 />
                 <Label htmlFor="show-qr-code">Show QR Code After Adding</Label>
               </div>
