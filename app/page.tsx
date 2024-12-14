@@ -24,6 +24,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -31,7 +32,7 @@ import {
 import brands from "./data/Brands";
 import materials from "./data/Materials";
 import { useRouter } from "next/navigation";
-import { Loader2, MoreHorizontal, Pencil, X } from "lucide-react";
+import { Loader2, MoreHorizontal, Pencil, Trash2, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -84,6 +85,10 @@ import { format } from "date-fns";
 import { DataTableToolbar } from "./components/data-table-toolbar";
 import { Color } from "./types/Color";
 import { revalidatePath } from "next/cache";
+import { Separator } from "@/components/ui/separator";
+import { DropdownMenuGroup } from "@radix-ui/react-dropdown-menu";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 
 export default function Home() {
   const [filaments, setFilaments] = useState<Filament[]>([]);
@@ -105,6 +110,41 @@ export default function Home() {
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
   const router = useRouter();
+  const [showQRCode, setShowQRCode] = useState(false);
+
+  const deleteFilament = async (filament: Filament) => {
+    if (!filament) return;
+
+    try {
+      const response = await fetch(`/api/filaments/${filament.id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete filament");
+      }
+      toast({
+        title: "Success",
+        description: `Filament #${filament.id} deleted successfully`,
+        variant: "default",
+        duration: 3000,
+      });
+      setFilaments((prevFilaments) =>
+        prevFilaments.filter((f) => f.id !== filament.id)
+      );
+    } catch (error) {
+      console.error("Error deleting filament:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete filament",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleEditClick = (filament: Filament) => {
+    router.push(`/filament/${filament.id}`);
+  };
 
   const columns: ColumnDef<Filament>[] = [
     {
@@ -112,14 +152,30 @@ export default function Home() {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="ID" />
       ),
-      cell: ({ row }) => <div>{row.getValue("id")}</div>,
+      cell: ({ row }) => {
+        const filament = row.original;
+
+        return (
+          <div onClick={() => handleEditClick(filament)}>
+            {row.getValue("id")}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "brand",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Brand" />
       ),
-      cell: ({ row }) => <div>{row.getValue("brand")}</div>,
+      cell: ({ row }) => {
+        const filament = row.original;
+
+        return (
+          <div onClick={() => handleEditClick(filament)}>
+            {row.getValue("brand")}
+          </div>
+        );
+      },
       filterFn: (row, id, value) => {
         // console.log("Filtering:", {
         //   rowValue: row.getValue(id),
@@ -133,7 +189,15 @@ export default function Home() {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Material" />
       ),
-      cell: ({ row }) => <div>{row.getValue("material")}</div>,
+      cell: ({ row }) => {
+        const filament = row.original;
+
+        return (
+          <div onClick={() => handleEditClick(filament)}>
+            {row.getValue("material")}
+          </div>
+        );
+      },
       filterFn: (row, id, value) => {
         // console.log("Filtering:", {
         //   rowValue: row.getValue(id),
@@ -147,17 +211,23 @@ export default function Home() {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Color" />
       ),
-      cell: ({ row }) => (
-        <div className="flex items-center">
+      cell: ({ row }) => {
+        const filament = row.original;
+        return (
           <div
-            className="w-4 h-4 rounded-full mr-2"
-            style={{
-              backgroundColor: (row.getValue("color") as { hex: string }).hex,
-            }}
-          />
-          {(row.getValue("color") as { name: string }).name}
-        </div>
-      ),
+            className="flex items-center"
+            onClick={() => handleEditClick(filament)}
+          >
+            <div
+              className="w-4 h-4 rounded-full mr-2"
+              style={{
+                backgroundColor: (row.getValue("color") as { hex: string }).hex,
+              }}
+            />
+            {(row.getValue("color") as { name: string }).name}
+          </div>
+        );
+      },
       filterFn: (row, id, value) => {
         const colorName = (row.getValue(id) as Color).name;
         return value.includes(colorName); // Filter based on color name
@@ -168,14 +238,42 @@ export default function Home() {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Weight" />
       ),
-      cell: ({ row }) => <div>{row.getValue("weight")}</div>,
+      cell: ({ row }) => {
+        const filament = row.original;
+        return (
+          <div onClick={() => handleEditClick(filament)}>
+            {row.getValue("weight")}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "location",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Location" />
       ),
-      cell: ({ row }) => <div>{row.getValue("location")}</div>,
+      cell: ({ row }) => {
+        const filament = row.original;
+        return (
+          <div onClick={() => handleEditClick(filament)}>
+            {row.getValue("location")}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "notes",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Notes" />
+      ),
+      cell: ({ row }) => {
+        const filament = row.original;
+        return (
+          <div onClick={() => handleEditClick(filament)}>
+            {row.getValue("notes")}
+          </div>
+        );
+      },
     },
     // {
     //   accessorKey: "createdAt",
@@ -192,7 +290,10 @@ export default function Home() {
       cell: ({ row }) => {
         const date = new Date(row.getValue("updatedAt"));
         const formattedDate = format(date, "MM/dd/yyyy h:mm a");
-        return <div>{formattedDate}</div>;
+        const filament = row.original;
+        return (
+          <div onClick={() => handleEditClick(filament)}>{formattedDate}</div>
+        );
       },
     },
     {
@@ -250,15 +351,25 @@ export default function Home() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={goToFilament(row.original.id)}>
+                  <Pencil className="h-4 w-4 mr-2" />{" "}
+                  <Label className="text-xs">Edit</Label>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={emptyFilament}>
+                  <X className="h-4 w-4 mr-2" />{" "}
+                  <Label className="text-xs">Mark as empty</Label>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={goToFilament(row.original.id)}>
-                <Pencil className="h-4 w-4 mr-2" />{" "}
-                <Label className="text-xs">Edit</Label>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={emptyFilament}>
-                <X className="h-4 w-4 mr-2" />{" "}
-                <Label className="text-xs">Mark as empty</Label>
+              <DropdownMenuItem
+                onClick={() => deleteFilament(filament)}
+                className="text-red-400"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                <Label className="text-xs">Delete</Label>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -343,6 +454,9 @@ export default function Home() {
       if (!response.ok) {
         throw new Error("Failed to add filament");
       }
+      const data = await response.json();
+      const filamentToAdd = data.filament as Filament;
+      setFilaments((prevFilaments) => [...prevFilaments, filamentToAdd]);
       setIsAddDialogOpen(false);
       setNewFilament({
         brand: "",
@@ -352,6 +466,8 @@ export default function Home() {
           hex: "",
         },
         weight: 0,
+        startingWeight: 0,
+        notes: "",
       });
       fetchFilaments();
       toast({
@@ -360,6 +476,7 @@ export default function Home() {
         variant: "default",
         duration: 3000,
       });
+      router.push(`/filament/${filamentToAdd.id}?showQR=${showQRCode}`);
     } catch (error) {
       console.error("Error adding filament:", error);
       toast({
@@ -608,6 +725,21 @@ export default function Home() {
                   readOnly
                 />
               </div>
+              <div>
+                <Label htmlFor="weight">Notes</Label>
+                <Textarea
+                  id="notes"
+                  name="notes"
+                  placeholder="Enter notes"
+                  value={newFilament.notes}
+                  onChange={(e) =>
+                    setNewFilament({
+                      ...newFilament,
+                      notes: e.target.value,
+                    })
+                  }
+                />
+              </div>
               <Button type="submit">
                 {isSubmitting ? (
                   <>
@@ -619,6 +751,16 @@ export default function Home() {
                 )}
               </Button>
             </form>
+            <DialogFooter>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="show-qr-code"
+                  checked={showQRCode}
+                  onChange={() => setShowQRCode(!showQRCode)}
+                />
+                <Label htmlFor="show-qr-code">Show QR Code After Adding</Label>
+              </div>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

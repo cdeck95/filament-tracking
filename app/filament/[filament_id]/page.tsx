@@ -37,9 +37,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { colors } from "@/app/data/Colors";
 import { set } from "date-fns";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function FilamentDetail({
   params,
@@ -65,12 +66,19 @@ export default function FilamentDetail({
     location: "",
     createdAt: new Date(),
     updatedAt: new Date(),
+    notes: "",
   });
   const [showQR, setShowQR] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get("showQR") === "true") {
+      setShowQR(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (id) {
@@ -95,7 +103,11 @@ export default function FilamentDetail({
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e:
+      | React.ChangeEvent<HTMLInputElement>
+      | React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
     console.log("handleChange", e.target.name, e.target.value);
     setFilament({ ...filament, [e.target.name]: e.target.value });
     setHasChanges(true);
@@ -283,6 +295,9 @@ export default function FilamentDetail({
                 <Skeleton className="w-32 h-10" /> {/* Print QR Code Button */}
                 <Skeleton className="w-32 h-10" /> {/* Show QR Code Button */}
               </div>
+              <div className="flex flex-row gap-4 justify-start items-center">
+                <Skeleton className="w-32 h-10" /> {/* Notes Text Area */}
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -430,6 +445,18 @@ export default function FilamentDetail({
               </div>
 
               <div>
+                <Label htmlFor="updated_at">Notes</Label>
+
+                <Textarea
+                  id="notes"
+                  name="notes"
+                  value={filament.notes}
+                  onChange={handleChange}
+                  placeholder="Enter notes"
+                  className="min-h-[9.5rem]"
+                />
+              </div>
+              <div>
                 <Label htmlFor="created_at">Created At</Label>
                 <Input
                   id="created_at"
@@ -493,9 +520,17 @@ export default function FilamentDetail({
       </Card>
 
       {showQR && (
-        <div className="fixed inset-0 bg-white z-50 flex items-center justify-center print:bg-transparent">
+        <div className="fixed inset-0 bg-white text-black z-50 flex items-center justify-center print:bg-transparent">
           <div className="text-center">
             <FilamentQRCode {...filament} />
+            <div className="flex flex-col">
+              <Button onClick={() => setShowQR(false)} className="mt-4">
+                Close
+              </Button>
+              <Button onClick={() => router.push("/")} className="mt-4">
+                Home
+              </Button>
+            </div>
           </div>
         </div>
       )}
