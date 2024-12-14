@@ -16,7 +16,7 @@ interface DataTableToolbarProps<TData> {
   setGlobalFilter: (value: string) => void;
 }
 
-export function DataTableToolbar<TData>({
+export function DataTableToolbarEmpty<TData>({
   table,
   globalFilter,
   setGlobalFilter,

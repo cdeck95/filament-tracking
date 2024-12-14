@@ -89,9 +89,12 @@ import { Separator } from "@/components/ui/separator";
 import { DropdownMenuGroup } from "@radix-ui/react-dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DataTableToolbarEmpty } from "./components/data-table-toolbar-empty";
 
 export default function Home() {
   const [filaments, setFilaments] = useState<Filament[]>([]);
+  const [emptyFilaments, setEmptyFilaments] = useState<Filament[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newFilament, setNewFilament] = useState<Omit<Filament, "id">>({
@@ -213,6 +216,7 @@ export default function Home() {
       ),
       cell: ({ row }) => {
         const filament = row.original;
+        if (!row.getValue("color")) return null;
         return (
           <div
             className="flex items-center"
@@ -386,9 +390,41 @@ export default function Home() {
   ];
 
   const [sorting, setSorting] = useState<SortingState>(initialSorting);
+  const [activeTab, setActiveTab] = useState("active");
 
   const table = useReactTable({
-    data: filaments,
+    data: activeTab === "active" ? filaments : emptyFilaments,
+    columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    getFacetedUniqueValues: getFacetedUniqueValues(), // Add this line
+    onRowSelectionChange: setRowSelection,
+    globalFilterFn: (row, columnId, filterValue) => {
+      const value = row.getValue(columnId);
+      if (typeof value === "string" || typeof value === "number") {
+        return String(value)
+          .toLowerCase()
+          .includes(String(filterValue).toLowerCase());
+      }
+      return false;
+    },
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+      globalFilter,
+    },
+    onGlobalFilterChange: setGlobalFilter,
+  });
+
+  const table2 = useReactTable({
+    data: emptyFilaments,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -419,6 +455,7 @@ export default function Home() {
   });
 
   table.getState().pagination.pageSize = 50;
+  table2.getState().pagination.pageSize = 50;
 
   useEffect(() => {
     fetchFilaments();
@@ -432,7 +469,18 @@ export default function Home() {
         throw new Error("Failed to fetch filaments");
       }
       const data = await response.json();
-      setFilaments(data);
+      console.log("Filaments fetched:", data);
+      const emptySpools = data.filter(
+        (filament: Filament) => filament.weight === 0
+      );
+      const filteredData = data.filter(
+        (filament: Filament) => filament.weight && filament.weight > 0
+      );
+
+      console.log(emptySpools);
+
+      setFilaments(filteredData);
+      setEmptyFilaments(emptySpools);
     } catch (error) {
       console.error("Error fetching filaments:", error);
     } finally {
@@ -804,76 +852,187 @@ export default function Home() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div> */}
-        {!isLoading && (
-          <DataTableToolbar
-            table={table}
-            globalFilter={globalFilter}
-            setGlobalFilter={setGlobalFilter}
-            setSearchTerm={setSearchTerm}
-          />
-        )}
 
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, index) => (
-                  <TableRow key={index}>
-                    {columns.map((column, cellIndex) => (
-                      <TableCell key={cellIndex}>
-                        <Skeleton className="w-full h-6" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    // data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
+        <Tabs defaultValue="active" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 w-[400px] justify-center mx-auto">
+            <TabsTrigger value="active" onClick={() => setActiveTab("active")}>
+              Active
+            </TabsTrigger>
+            <TabsTrigger value="empty" onClick={() => setActiveTab("empty")}>
+              Empty
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="active">
+            <Card>
+              <CardHeader>
+                <CardTitle>Active Spools</CardTitle>
+                <CardDescription>
+                  View and manage your active spools here.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {!isLoading && (
+                  <DataTableToolbar
+                    table={table}
+                    globalFilter={globalFilter}
+                    setGlobalFilter={setGlobalFilter}
+                    setSearchTerm={setSearchTerm}
+                  />
+                )}
+
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <TableRow key={headerGroup.id}>
+                          {headerGroup.headers.map((header) => {
+                            return (
+                              <TableHead key={header.id}>
+                                {header.isPlaceholder
+                                  ? null
+                                  : flexRender(
+                                      header.column.columnDef.header,
+                                      header.getContext()
+                                    )}
+                              </TableHead>
+                            );
+                          })}
+                        </TableRow>
+                      ))}
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading ? (
+                        Array.from({ length: 5 }).map((_, index) => (
+                          <TableRow key={index}>
+                            {columns.map((column, cellIndex) => (
+                              <TableCell key={cellIndex}>
+                                <Skeleton className="w-full h-6" />
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))
+                      ) : table.getRowModel().rows?.length ? (
+                        table.getRowModel().rows.map((row) => (
+                          <TableRow
+                            key={row.id}
+                            // data-state={row.getIsSelected() && "selected"}
+                          >
+                            {row.getVisibleCells().map((cell) => (
+                              <TableCell key={cell.id}>
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext()
+                                )}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={columns.length}
+                            className="h-24 text-center"
+                          >
+                            No results.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+                <DataTablePagination table={table} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="empty" className="w-full h-full">
+            <Card className="h-full w-full">
+              <CardHeader>
+                <CardTitle>Empty Spools</CardTitle>
+                <CardDescription>
+                  View and manage your empty spools here.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {!isLoading && (
+                  <DataTableToolbarEmpty
+                    table={table2}
+                    globalFilter={globalFilter}
+                    setGlobalFilter={setGlobalFilter}
+                    setSearchTerm={setSearchTerm}
+                  />
+                )}
+
+                {emptyFilaments.length > 0 ? (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        {table.getHeaderGroups().map((headerGroup) => (
+                          <TableRow key={headerGroup.id}>
+                            {headerGroup.headers.map((header) => {
+                              return (
+                                <TableHead key={header.id}>
+                                  {header.isPlaceholder
+                                    ? null
+                                    : flexRender(
+                                        header.column.columnDef.header,
+                                        header.getContext()
+                                      )}
+                                </TableHead>
+                              );
+                            })}
+                          </TableRow>
+                        ))}
+                      </TableHeader>
+                      <TableBody>
+                        {isLoading ? (
+                          Array.from({ length: 5 }).map((_, index) => (
+                            <TableRow key={index}>
+                              {columns.map((column, cellIndex) => (
+                                <TableCell key={cellIndex}>
+                                  <Skeleton className="w-full h-6" />
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          ))
+                        ) : table.getRowModel().rows?.length ? (
+                          table.getRowModel().rows.map((row) => (
+                            <TableRow
+                              key={row.id}
+                              // data-state={row.getIsSelected() && "selected"}
+                            >
+                              {row.getVisibleCells().map((cell) => (
+                                <TableCell key={cell.id}>
+                                  {flexRender(
+                                    cell.column.columnDef.cell,
+                                    cell.getContext()
+                                  )}
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell
+                              colSpan={columns.length}
+                              className="h-24 text-center"
+                            >
+                              No results.
+                            </TableCell>
+                          </TableRow>
                         )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <DataTablePagination table={table} />
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="h-full flex items-center justify-center">
+                    <p className="text-lg text-gray-500">No empty spools</p>
+                  </div>
+                )}
+                <DataTablePagination table={table2} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
