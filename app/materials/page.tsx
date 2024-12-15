@@ -97,10 +97,13 @@ export default function MaterialsPage() {
   const handleEditMaterial = async () => {
     if (!editingMaterial) return;
     try {
+      const encodedOriginalMaterial = encodeURIComponent(
+        editingMaterial.original
+      );
       const response = await fetch(
-        `/api/materials/${editingMaterial.original}`,
+        `/api/materials/${encodedOriginalMaterial}`,
         {
-          method: "PUT",
+          method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ newMaterial: editingMaterial.edited }),
         }
@@ -133,7 +136,8 @@ export default function MaterialsPage() {
   const handleDeleteMaterial = async () => {
     if (!materialToDelete) return;
     try {
-      const response = await fetch(`/api/materials/${materialToDelete}`, {
+      const encodedMaterial = encodeURIComponent(materialToDelete);
+      const response = await fetch(`/api/materials/${encodedMaterial}`, {
         method: "DELETE",
       });
       if (response.ok) {

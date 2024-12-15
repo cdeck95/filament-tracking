@@ -21,13 +21,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { toast } from "@/hooks/use-toast";
 import { Color } from "../types/Color";
+import { toast } from "@/hooks/use-toast";
 
 export default function ColorsPage() {
   const [colors, setColors] = useState<Color[]>([]);
   const [newColor, setNewColor] = useState<Color>({ name: "", hex: "" });
-  const [editingColor, setEditingColor] = useState<Color | null>(null);
+  const [editingColor, setEditingColor] = useState<{
+    original: Color;
+    edited: Color;
+  } | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -95,10 +98,13 @@ export default function ColorsPage() {
   const handleEditColor = async () => {
     if (!editingColor) return;
     try {
-      const response = await fetch(`/api/colors/${editingColor.name}`, {
-        method: "PUT",
+      const encodedOriginalColorName = encodeURIComponent(
+        editingColor.original.name
+      );
+      const response = await fetch(`/api/colors/${encodedOriginalColorName}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editingColor),
+        body: JSON.stringify({ newColor: editingColor.edited }),
       });
       if (response.ok) {
         setIsEditDialogOpen(false);
@@ -128,7 +134,8 @@ export default function ColorsPage() {
   const handleDeleteColor = async () => {
     if (!colorToDelete) return;
     try {
-      const response = await fetch(`/api/colors/${colorToDelete.name}`, {
+      const encodedColorName = encodeURIComponent(colorToDelete.name);
+      const response = await fetch(`/api/colors/${encodedColorName}`, {
         method: "DELETE",
       });
       if (response.ok) {
@@ -187,7 +194,7 @@ export default function ColorsPage() {
                   variant="outline"
                   className="mr-2"
                   onClick={() => {
-                    setEditingColor(color);
+                    setEditingColor({ original: color, edited: { ...color } });
                     setIsEditDialogOpen(true);
                   }}
                 >
@@ -261,10 +268,15 @@ export default function ColorsPage() {
               </Label>
               <Input
                 id="editName"
-                value={editingColor?.name || ""}
+                value={editingColor?.edited.name || ""}
                 onChange={(e) =>
                   setEditingColor((prev) =>
-                    prev ? { ...prev, name: e.target.value } : null
+                    prev
+                      ? {
+                          ...prev,
+                          edited: { ...prev.edited, name: e.target.value },
+                        }
+                      : null
                   )
                 }
                 className="col-span-3"
@@ -276,10 +288,15 @@ export default function ColorsPage() {
               </Label>
               <Input
                 id="editHex"
-                value={editingColor?.hex || ""}
+                value={editingColor?.edited.hex || ""}
                 onChange={(e) =>
                   setEditingColor((prev) =>
-                    prev ? { ...prev, hex: e.target.value } : null
+                    prev
+                      ? {
+                          ...prev,
+                          edited: { ...prev.edited, hex: e.target.value },
+                        }
+                      : null
                   )
                 }
                 className="col-span-3"
