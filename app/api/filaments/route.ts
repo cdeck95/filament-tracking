@@ -25,7 +25,7 @@ async function getFilaments(): Promise<Filament[]> {
     createdAt: filament.createdAt || today, // Set createdAt if not present
     updatedAt: filament.updatedAt || today, // Set updatedAt if not present
   }));
-  console.log("Filaments updated:", updatedFilaments);
+  //console.log("Filaments updated:", updatedFilaments);
 
   await saveFilaments(updatedFilaments);
 

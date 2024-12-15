@@ -21,8 +21,6 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Filament } from "@/app/types/Filament";
 import FilamentQRCode from "@/app/components/QRCode";
-import brands from "@/app/data/Brands";
-import materials from "@/app/data/Materials";
 import { toast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Trash } from "lucide-react";
@@ -38,9 +36,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useRouter, useSearchParams } from "next/navigation";
-import { colors } from "@/app/data/Colors";
-import { set } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
+import { Color } from "@/app/types/Color";
+import { Separator } from "@/components/ui/separator";
 
 export default function FilamentDetail({
   params,
@@ -74,6 +72,31 @@ export default function FilamentDetail({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [brands, setBrands] = useState<string[]>([]);
+  const [materials, setMaterials] = useState<string[]>([]);
+  const [colors, setColors] = useState<Color[]>([]);
+
+  useEffect(() => {
+    fetchLists();
+  }, []);
+
+  const fetchLists = async () => {
+    const [brandsResponse, materialsResponse, colorsResponse] =
+      await Promise.all([
+        fetch("/api/brands"),
+        fetch("/api/materials"),
+        fetch("/api/colors"),
+      ]);
+    const [brandsData, materialsData, colorsData] = await Promise.all([
+      brandsResponse.json(),
+      materialsResponse.json(),
+      colorsResponse.json(),
+    ]);
+    setBrands(brandsData);
+    setMaterials(materialsData);
+    setColors(colorsData);
+  };
+
   useEffect(() => {
     if (searchParams.get("showQR") === "true") {
       setShowQR(true);

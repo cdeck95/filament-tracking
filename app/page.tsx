@@ -29,8 +29,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import brands from "./data/Brands";
-import materials from "./data/Materials";
 import { useRouter } from "next/navigation";
 import { Loader2, MoreHorizontal, Pencil, Trash2, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -70,33 +68,28 @@ import {
 } from "@tanstack/react-table";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
 import { DataTableColumnHeader } from "./components/data-table-column-header";
-import { colors } from "./data/Colors";
 import { DataTablePagination } from "./components/data-table-pagination";
-import { format } from "date-fns";
+import { format, set } from "date-fns";
 import { DataTableToolbar } from "./components/data-table-toolbar";
 import { Color } from "./types/Color";
-import { revalidatePath } from "next/cache";
-import { Separator } from "@/components/ui/separator";
 import { DropdownMenuGroup } from "@radix-ui/react-dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTableToolbarEmpty } from "./components/data-table-toolbar-empty";
+import { Separator } from "@/components/ui/separator";
 
 export default function Home() {
   const [filaments, setFilaments] = useState<Filament[]>([]);
   const [emptyFilaments, setEmptyFilaments] = useState<Filament[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newFilament, setNewFilament] = useState<Omit<Filament, "id">>({
     brand: "",
     material: "",
@@ -114,6 +107,40 @@ export default function Home() {
   const [globalFilter, setGlobalFilter] = useState("");
   const router = useRouter();
   const [showQRCode, setShowQRCode] = useState(true);
+  const [newBrand, setNewBrand] = useState("");
+  const [newMaterial, setNewMaterial] = useState("");
+  const [newColor, setNewColor] = useState<Partial<Color>>({
+    name: "",
+    hex: "",
+  });
+  const [brands, setBrands] = useState<string[]>([]);
+  const [materials, setMaterials] = useState<string[]>([]);
+  const [colors, setColors] = useState<Color[]>([]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isAddBrandDialogOpen, setIsAddBrandDialogOpen] = useState(false);
+  const [isAddMaterialDialogOpen, setIsAddMaterialDialogOpen] = useState(false);
+  const [isAddColorDialogOpen, setIsAddColorDialogOpen] = useState(false);
+
+  useEffect(() => {
+    fetchLists();
+  }, []);
+
+  const fetchLists = async () => {
+    const [brandsResponse, materialsResponse, colorsResponse] =
+      await Promise.all([
+        fetch("/api/brands"),
+        fetch("/api/materials"),
+        fetch("/api/colors"),
+      ]);
+    const [brandsData, materialsData, colorsData] = await Promise.all([
+      brandsResponse.json(),
+      materialsResponse.json(),
+      colorsResponse.json(),
+    ]);
+    setBrands(brandsData);
+    setMaterials(materialsData);
+    setColors(colorsData);
+  };
 
   const deleteFilament = async (filament: Filament) => {
     if (!filament) return;
@@ -592,6 +619,123 @@ export default function Home() {
     }));
   }, [table.getFilteredRowModel().rows]);
 
+  const handleAddBrand = async () => {
+    try {
+      const response = await fetch("/api/brands", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brand: newBrand }),
+      });
+      if (response.ok) {
+        setIsAddBrandDialogOpen(false);
+        setBrands([...brands, newBrand]);
+        setNewFilament({ ...newFilament, brand: newBrand });
+        setNewBrand("");
+        toast({
+          title: "Success",
+          description: "Brand added successfully",
+          variant: "default",
+          duration: 3000,
+        });
+      } else {
+        console.error("Failed to add brand");
+        toast({
+          title: "Error",
+          description: "Failed to add brand",
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      console.error("Error adding brand:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add brand",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleAddMaterial = async () => {
+    try {
+      const response = await fetch("/api/materials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ material: newMaterial }),
+      });
+      if (response.ok) {
+        setIsAddMaterialDialogOpen(false);
+        setNewMaterial("");
+        setMaterials([...materials, newMaterial]);
+        setNewFilament({ ...newFilament, material: newMaterial });
+        toast({
+          title: "Success",
+          description: "Material added successfully",
+          variant: "default",
+          duration: 3000,
+        });
+      } else {
+        console.error("Failed to add material");
+        toast({
+          title: "Error",
+          description: "Failed to add material",
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      console.error("Error adding material:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add material",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleAddColor = async () => {
+    try {
+      const response = await fetch("/api/colors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newColor),
+      });
+      if (response.ok) {
+        setIsAddColorDialogOpen(false);
+        setNewColor({ name: "", hex: "" });
+        setColors([...colors, newColor as Color]);
+        setNewFilament({
+          ...newFilament,
+          color: newColor as Color,
+        });
+        toast({
+          title: "Success",
+          description: "Color added successfully",
+          variant: "default",
+          duration: 3000,
+        });
+      } else {
+        console.error("Failed to add color");
+        toast({
+          title: "Error",
+          description: "Failed to add color",
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      console.error("Error adding color:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add color",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6 text-center">Filament Tracker</h1>
@@ -664,7 +808,7 @@ export default function Home() {
           <DialogTrigger asChild>
             <Button className="w-full sm:w-auto">+ Add New Filament</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-[90%]">
+          <DialogContent className="max-w-[90%] max-h-[90%] overflow-y-auto z-50">
             <DialogHeader>
               <DialogTitle>Add New Filament</DialogTitle>
               <DialogDescription>
@@ -676,9 +820,13 @@ export default function Home() {
                 <Label htmlFor="brand">Brand</Label>
                 <Select
                   value={newFilament.brand}
-                  onValueChange={(value) =>
-                    setNewFilament({ ...newFilament, brand: value })
-                  }
+                  onValueChange={(value) => {
+                    if (value === "add_new") {
+                      setIsAddBrandDialogOpen(true);
+                    } else {
+                      setNewFilament({ ...newFilament, brand: value });
+                    }
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select brand" />
@@ -689,6 +837,8 @@ export default function Home() {
                         {brand}
                       </SelectItem>
                     ))}
+                    <Separator className="my-1" />
+                    <SelectItem value="add_new">+ Add New Brand</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -696,9 +846,13 @@ export default function Home() {
                 <Label htmlFor="material">Material</Label>
                 <Select
                   value={newFilament.material}
-                  onValueChange={(value) =>
-                    setNewFilament({ ...newFilament, material: value })
-                  }
+                  onValueChange={(value) => {
+                    if (value === "add_new") {
+                      setIsAddMaterialDialogOpen(true);
+                    } else {
+                      setNewFilament({ ...newFilament, material: value });
+                    }
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select material" />
@@ -709,6 +863,8 @@ export default function Home() {
                         {material}
                       </SelectItem>
                     ))}
+                    <Separator className="my-1" />
+                    <SelectItem value="add_new">+ Add New Material</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -717,11 +873,17 @@ export default function Home() {
                 <Select
                   value={newFilament.color.name}
                   onValueChange={(value) => {
-                    const selectedColor = colors.find((c) => c.name === value);
-                    setNewFilament({
-                      ...newFilament,
-                      color: selectedColor || { name: "", hex: "" },
-                    });
+                    if (value === "add_new") {
+                      setIsAddColorDialogOpen(true);
+                    } else {
+                      const selectedColor = colors.find(
+                        (c) => c.name === value
+                      );
+                      setNewFilament({
+                        ...newFilament,
+                        color: selectedColor || { name: "", hex: "" },
+                      });
+                    }
                   }}
                 >
                   <SelectTrigger>
@@ -741,6 +903,8 @@ export default function Home() {
                           </div>
                         </SelectItem>
                       ))}
+                    <Separator className="my-1" />
+                    <SelectItem value="add_new">+ Add New Color</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -812,8 +976,90 @@ export default function Home() {
               </div>
             </DialogFooter>
           </DialogContent>
+          <Dialog
+            open={isAddBrandDialogOpen}
+            onOpenChange={setIsAddBrandDialogOpen}
+          >
+            <DialogContent className="max-w-[90%] max-h-[90%] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add New Brand</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="newBrand">Brand Name</Label>
+                  <Input
+                    id="newBrand"
+                    value={newBrand}
+                    onChange={(e) => setNewBrand(e.target.value)}
+                    placeholder="Enter new brand name"
+                  />
+                </div>
+                <Button onClick={handleAddBrand}>Add Brand</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog
+            open={isAddMaterialDialogOpen}
+            onOpenChange={setIsAddMaterialDialogOpen}
+          >
+            <DialogContent className="max-w-[90%] max-h-[90%] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add New Material</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="newMaterial">Material Name</Label>
+                  <Input
+                    id="newMaterial"
+                    value={newMaterial}
+                    onChange={(e) => setNewMaterial(e.target.value)}
+                    placeholder="Enter new material name"
+                  />
+                </div>
+                <Button onClick={handleAddMaterial}>Add Material</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog
+            open={isAddColorDialogOpen}
+            onOpenChange={setIsAddColorDialogOpen}
+          >
+            <DialogContent className="max-w-[90%] max-h-[90%] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add New Color</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="newColorName">Color Name</Label>
+                  <Input
+                    id="newColorName"
+                    value={newColor.name}
+                    onChange={(e) =>
+                      setNewColor({ ...newColor, name: e.target.value })
+                    }
+                    placeholder="Enter new color name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="newColorHex">Color Hex Code</Label>
+                  <Input
+                    id="newColorHex"
+                    value={newColor.hex}
+                    onChange={(e) =>
+                      setNewColor({ ...newColor, hex: e.target.value })
+                    }
+                    placeholder="Enter color hex code (e.g., #FF0000)"
+                  />
+                </div>
+                <Button onClick={handleAddColor}>Add Color</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </Dialog>
       </div>
+
       <div className="space-y-4">
         {/* <div className="flex items-center py-4">
           <Input
@@ -854,7 +1100,7 @@ export default function Home() {
         </div> */}
 
         <Tabs defaultValue="active" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 w-[400px] justify-center mx-auto">
+          <TabsList className="grid w-full grid-cols-2 w-[80%] md:w-[400px] justify-center mx-auto">
             <TabsTrigger value="active" onClick={() => setActiveTab("active")}>
               Active
             </TabsTrigger>
@@ -864,13 +1110,13 @@ export default function Home() {
           </TabsList>
           <TabsContent value="active">
             <Card>
-              <CardHeader>
+              <CardHeader className="p-4 md:p-6">
                 <CardTitle>Active Spools</CardTitle>
                 <CardDescription>
                   View and manage your active spools here.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-2 p-4 md:p-6">
                 {!isLoading && (
                   <DataTableToolbar
                     table={table}
