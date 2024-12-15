@@ -6,6 +6,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { ModeToggle } from "@/components/ui/modetoggle";
 import Link from "next/link";
 import { VersionBanner } from "./components/version-banner";
+import { AppSidebar } from "./components/navigation-sidebar";
+import SideMenu from "./components/sidemenu";
+import MenuHeader from "./components/menuheader";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,11 +32,18 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="fixed top-4 left-4 z-50">
-            <ModeToggle />
+          <div className="flex h-dvh">
+            <SideMenu />
+            <div className="flex flex-col flex-1 w-full h-full">
+              <MenuHeader />
+              <VersionBanner />
+              <ScrollArea className="h-dvh w-full">
+                <main className="flex-1 overflow-auto p-0 m-0 md:p-4">
+                  {children}
+                </main>
+              </ScrollArea>
+            </div>
           </div>
-          <VersionBanner />
-          <div className="mt-[10px]">{children}</div>
           <Toaster />
         </ThemeProvider>
       </body>

@@ -247,16 +247,16 @@ export default function Home() {
         if (!row.getValue("color")) return null;
         return (
           <div
-            className="flex items-center"
+            className="flex items-center min-w-fit"
             onClick={() => handleEditClick(filament)}
           >
             <div
-              className="w-4 h-4 rounded-full mr-2"
+              className="w-4 h-4 rounded-full mr-2 min-w-[16px]"
               style={{
                 backgroundColor: (row.getValue("color") as { hex: string }).hex,
               }}
             />
-            {(row.getValue("color") as { name: string }).name}
+            <Label>{(row.getValue("color") as { name: string }).name}</Label>
           </div>
         );
       },
@@ -779,9 +779,9 @@ export default function Home() {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-center">Filament Tracker</h1>
-      <Card className="mb-6 hidden lg:block">
+    <div className="grid grid-cols-1 gap-2 p-2">
+      <h1 className="text-3xl font-bold mb-2 text-center">Filament Tracker</h1>
+      <Card className="mb-2 hidden lg:block">
         <CardHeader>
           <CardTitle>Filament Stock Overview</CardTitle>
           <CardDescription>
@@ -840,18 +840,10 @@ export default function Home() {
         </CardContent>
       </Card>
 
-      <div className="mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-        {/* <Input
-          type="text"
-          placeholder="Search filaments..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full sm:max-w-sm"
-        /> */}
-
+      <div className="mb-4 flex flex-col sm:flex-row justify-end items-center gap-2">
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto">+ Add New Filament</Button>
+            <Button className="w-[200px] md:w-auto">+ Add Filament</Button>
           </DialogTrigger>
           <DialogContent className="max-w-[90%] max-h-[90%] overflow-y-auto z-50">
             <DialogHeader>
@@ -1199,13 +1191,13 @@ export default function Home() {
           </TabsContent>
           <TabsContent value="empty" className="w-full h-full">
             <Card className="h-full w-full">
-              <CardHeader>
+              <CardHeader className="p-4 md:p-6">
                 <CardTitle>Empty Spools</CardTitle>
                 <CardDescription>
                   View and manage your empty spools here.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-2 p-4 md:p-6">
                 {!isLoading && (
                   <DataTableToolbarEmpty
                     table={table2}

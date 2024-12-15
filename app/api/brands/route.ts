@@ -25,13 +25,7 @@ async function saveBrands(brands: string[]): Promise<void> {
 export async function GET() {
   try {
     const brands = await getBrands();
-    return new NextResponse(JSON.stringify(brands), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-store, max-age=0",
-      },
-    });
+    return NextResponse.json(brands);
   } catch (error) {
     return NextResponse.json(
       { message: "Error fetching brands", error },
@@ -44,9 +38,10 @@ export async function POST(req: NextRequest) {
   try {
     const { brand } = await req.json();
     const brands = await getBrands();
+    const normalizedBrand = brand.trim();
 
-    if (!brands.includes(brand)) {
-      brands.push(brand);
+    if (!brands.includes(normalizedBrand)) {
+      brands.push(normalizedBrand);
       await saveBrands(brands);
     }
 
