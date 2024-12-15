@@ -64,6 +64,7 @@ const updates: ChangeLogEntry[] = [
       "Added a toggle to auto-open the QR code after adding a filament",
       "Added Change Log page to track version history",
       "Added a 'empty spools' tab to the filament table. When a filament is marked as empty, it will automatically be moved to this tab",
+      "Added the ability to add custom colors, brands, and materials",
     ],
   },
 ];
