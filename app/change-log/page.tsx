@@ -89,21 +89,23 @@ export default function ChangeLog() {
 
       <h1 className="text-3xl font-bold mb-6">Change Log</h1>
 
-      {changeLog.map((entry, index) => (
-        <Card key={index} className="mb-6">
-          <CardHeader>
-            <CardTitle>Version {entry.version}</CardTitle>
-            <CardDescription>{entry.date}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ul className="list-disc pl-5 space-y-2">
-              {entry.changes.map((change, changeIndex) => (
-                <li key={changeIndex}>{change}</li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      ))}
+      {changeLog
+        .sort((a, b) => (a.date > b.date ? -1 : 1))
+        .map((entry, index) => (
+          <Card key={index} className="mb-6">
+            <CardHeader>
+              <CardTitle>Version {entry.version}</CardTitle>
+              <CardDescription>{entry.date}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="list-disc pl-5 space-y-2">
+                {entry.changes.map((change, changeIndex) => (
+                  <li key={changeIndex}>{change}</li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        ))}
     </div>
   );
 }
