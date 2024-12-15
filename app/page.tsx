@@ -799,7 +799,7 @@ export default function Home() {
             className="max-h-[350px]"
           >
             <BarChart
-              data={transformedFilaments} // Use transformed filaments with string id
+              data={transformedFilaments.sort((a, b) => b.weight - a.weight)} // Sort by weight descending // Use transformed filaments with string id
               layout="vertical" // Set layout to vertical
               margin={{ top: 10, right: 10, bottom: 10, left: 20 }}
               barCategoryGap="20%" // Adjust the gap between categories
