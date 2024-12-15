@@ -67,6 +67,15 @@ const updates: ChangeLogEntry[] = [
       "Added the ability to add custom colors, brands, and materials",
     ],
   },
+  {
+    version: "1.1.1",
+    date: "2024-12-15",
+    changes: [
+      "Centered the QR code on the Filament page",
+      "Fixed a bug where the column headers would not display correctly",
+      "Added a 'diff' calculation to the filament weight column to show the difference between the starting weight and current weight",
+    ],
+  },
 ];
 
 export default function ChangeLog() {

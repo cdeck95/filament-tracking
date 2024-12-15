@@ -544,7 +544,7 @@ export default function FilamentDetail({
 
       {showQR && (
         <div className="fixed inset-0 bg-white text-black z-50 flex items-center justify-center print:bg-transparent">
-          <div className="text-center">
+          <div className="text-center justify-center items-center">
             <FilamentQRCode {...filament} />
             <div className="flex flex-col">
               <Button onClick={() => setShowQR(false)} className="mt-4">

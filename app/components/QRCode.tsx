@@ -21,7 +21,7 @@ export default function FilamentQRCode({
   }/filament/${id}`;
 
   return (
-    <div className="text-center">
+    <div className="flex flex-col items-center">
       <QRCodeSVG value={url} size={256} />
       <p className="mt-4 text-lg font-semibold">Filament #{id}</p>
       <p>

@@ -271,9 +271,18 @@ export default function Home() {
       ),
       cell: ({ row }) => {
         const filament = row.original;
+        const originalWeight = row.original.startingWeight;
+        const weight = row.original.weight;
+
+        let diff = 0;
+        if (originalWeight && weight) {
+          diff = Math.round(weight - originalWeight);
+        }
+
         return (
           <div onClick={() => handleEditClick(filament)}>
-            {row.getValue("weight")}
+            {row.getValue("weight")}g{" "}
+            {diff !== 0 && `(${diff > 0 ? "+" : ""}${diff}g)`}
           </div>
         );
       },
