@@ -42,13 +42,34 @@ async function saveFilaments(filaments: Filament[]): Promise<void> {
 
 export async function GET() {
   try {
-    console.log("Fetching filaments...");
-    const filaments = await getFilaments();
+    console.log("Fetching and checking filaments...");
+    let filaments = await getFilaments();
+    let updated = false;
+
+    filaments = filaments.map((filament) => {
+      if (typeof filament.weight === "string") {
+        const numWeight = parseFloat(filament.weight);
+        if (!isNaN(numWeight)) {
+          filament.weight = numWeight;
+          updated = true;
+        } else if (filament.weight === "0" || filament.weight === "") {
+          filament.weight = 0;
+          updated = true;
+        }
+      }
+      return filament;
+    });
+
+    if (updated) {
+      console.log("Updating filaments with corrected weight values...");
+      await saveFilaments(filaments);
+    }
+
     return NextResponse.json(filaments);
   } catch (error) {
-    console.error("Error fetching filaments:", error);
+    console.error("Error fetching and updating filaments:", error);
     return NextResponse.json(
-      { message: "Error fetching filaments", error },
+      { message: "Error fetching and updating filaments", error },
       { status: 500 }
     );
   }
