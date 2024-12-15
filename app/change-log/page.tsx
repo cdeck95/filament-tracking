@@ -80,6 +80,7 @@ const updates: ChangeLogEntry[] = [
       "Added sidebar navigation",
       "Added authentication",
       "Added Data Management section, can now edit and delete brands, colors and materials",
+      "Fixed the color faceted filter to show the color dot next to the color name & aggregate weight in the graph",
     ],
   },
 ];
