@@ -826,7 +826,12 @@ export default function Home() {
               <ChartTooltip content={<ChartTooltipContent />} />
               <Bar dataKey="weight" fill="var(--color-weight)">
                 {transformedFilaments.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={
+                      entry.color !== "#FFFFFF" ? entry.color : "black" // Use black color for white filaments
+                    }
+                  />
                 ))}
                 <LabelList
                   dataKey="weight"

@@ -12,8 +12,8 @@ import { Color } from "../types/Color";
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
   globalFilter: string;
-  setSearchTerm: (value: string) => void;
   handleGlobalFilter: (value: string) => void;
+  setSearchTerm: (value: string) => void;
 }
 
 export function DataTableToolbarEmpty<TData>({
@@ -38,7 +38,6 @@ export function DataTableToolbarEmpty<TData>({
     updatedAt: "Updated At",
   };
 
-  // Assuming `tableData` is the data fed into the table
   const uniqueBrands = useMemo(() => {
     const values = table
       .getCoreRowModel()
@@ -46,9 +45,6 @@ export function DataTableToolbarEmpty<TData>({
     return Array.from(new Set(values));
   }, [table]);
 
-  // console.log("uniqueBrands", uniqueBrands);
-
-  // Convert the Set to an array and map it to the format needed for the options
   const brandOptions = Array.from(uniqueBrands).map((brand) => ({
     value: brand,
     label: brand,
@@ -61,9 +57,6 @@ export function DataTableToolbarEmpty<TData>({
     return Array.from(new Set(values));
   }, [table]);
 
-  // console.log("uniqueMaterials", uniqueMaterials);
-
-  // Convert the Set to an array and map it to the format needed for the options
   const materialOptions = Array.from(uniqueMaterials).map((material) => ({
     value: material,
     label: material,
@@ -73,20 +66,15 @@ export function DataTableToolbarEmpty<TData>({
     const values = table
       .getCoreRowModel()
       .flatRows.map((row) => row.getValue("color")) as Color[];
-    return Array.from(new Set(values.map((color) => color.name)));
+    return Array.from(new Set(values.map((color) => JSON.stringify(color))));
   }, [table]);
 
-  // console.log("uniqueColors", uniqueColors);
-
-  // Convert the Set to an array and map it to the format needed for the options
-  const colorOptions = Array.from(uniqueColors).map((colorName) => {
-    const color = table
-      .getCoreRowModel()
-      .flatRows.map((row) => row.getValue("color"))
-      .find((color) => (color as Color).name === colorName) as Color;
+  const colorOptions = Array.from(uniqueColors).map((colorString) => {
+    const color = JSON.parse(colorString) as Color;
     return {
-      value: color.name || "",
-      label: `${color.name}`,
+      value: color.name,
+      label: color.name,
+      hex: color.hex,
     };
   });
 
@@ -95,7 +83,6 @@ export function DataTableToolbarEmpty<TData>({
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
-      // console.log("width: ", width);
       setIsMobile(width <= 1080);
     };
 
@@ -132,9 +119,6 @@ export function DataTableToolbarEmpty<TData>({
                   column={table.getColumn("brand")}
                   title="Brand"
                   options={brandOptions}
-                  globalFilter={globalFilter}
-                  setGlobalFilter={handleGlobalFilter}
-                  setSearchTerm={setSearchTerm}
                 />
               )}
               {table.getColumn("material") && materialOptions.length > 0 && (
@@ -142,9 +126,6 @@ export function DataTableToolbarEmpty<TData>({
                   column={table.getColumn("material")}
                   title="Material"
                   options={materialOptions}
-                  globalFilter={globalFilter}
-                  setGlobalFilter={handleGlobalFilter}
-                  setSearchTerm={setSearchTerm}
                 />
               )}
             </div>
@@ -154,9 +135,6 @@ export function DataTableToolbarEmpty<TData>({
                   column={table.getColumn("color")}
                   title="Color"
                   options={colorOptions}
-                  globalFilter={globalFilter}
-                  setGlobalFilter={handleGlobalFilter}
-                  setSearchTerm={setSearchTerm}
                 />
               )}
               {isFiltered && (
@@ -184,9 +162,6 @@ export function DataTableToolbarEmpty<TData>({
                 column={table.getColumn("brand")}
                 title="Brand"
                 options={brandOptions}
-                globalFilter={globalFilter}
-                setGlobalFilter={handleGlobalFilter}
-                setSearchTerm={setSearchTerm}
               />
             )}
             {table.getColumn("material") && materialOptions.length > 0 && (
@@ -194,9 +169,6 @@ export function DataTableToolbarEmpty<TData>({
                 column={table.getColumn("material")}
                 title="Material"
                 options={materialOptions}
-                globalFilter={globalFilter}
-                setGlobalFilter={handleGlobalFilter}
-                setSearchTerm={setSearchTerm}
               />
             )}
             {table.getColumn("color") && colorOptions.length > 0 && (
@@ -204,9 +176,6 @@ export function DataTableToolbarEmpty<TData>({
                 column={table.getColumn("color")}
                 title="Color"
                 options={colorOptions}
-                globalFilter={globalFilter}
-                setGlobalFilter={handleGlobalFilter}
-                setSearchTerm={setSearchTerm}
               />
             )}
             {isFiltered && (

@@ -29,11 +29,9 @@ interface DataTableFacetedFilterProps<TData, TValue> {
   options: {
     label: string;
     value: string;
+    hex?: string;
     icon?: React.ComponentType<{ className?: string }>;
   }[];
-  globalFilter?: string;
-  setGlobalFilter?: (value: string) => void;
-  setSearchTerm?: (value: string) => void;
 }
 
 export function DataTableFacetedFilter<TData, TValue>({
@@ -44,8 +42,7 @@ export function DataTableFacetedFilter<TData, TValue>({
   const facets = column?.getFacetedUniqueValues();
   const selectedValues = new Set(column?.getFilterValue() as string[]);
 
-  // console.log("facets", facets);
-  // console.log("selectedValues", selectedValues);
+  const isColorColumn = title?.toLowerCase() === "color";
 
   return (
     <Popover>
@@ -96,6 +93,11 @@ export function DataTableFacetedFilter<TData, TValue>({
             <CommandGroup>
               {options.map((option) => {
                 const isSelected = selectedValues.has(option.value);
+                const facetValue = isColorColumn
+                  ? facets?.get(
+                      JSON.stringify({ name: option.label, hex: option.hex })
+                    )
+                  : facets?.get(option.value);
                 return (
                   <CommandItem
                     key={option.value}
@@ -121,13 +123,19 @@ export function DataTableFacetedFilter<TData, TValue>({
                     >
                       <CheckIcon className={cn("h-4 w-4")} />
                     </div>
+                    {isColorColumn && (
+                      <div
+                        className="mr-2 h-4 w-4 rounded-full"
+                        style={{ backgroundColor: option.hex }}
+                      />
+                    )}
                     {option.icon && (
                       <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
                     )}
                     <span>{option.label}</span>
-                    {facets?.get(option.value) && (
+                    {facetValue && (
                       <span className="ml-auto flex h-4 w-4 items-center justify-center font-mono text-xs">
-                        {facets.get(option.value)}
+                        {facetValue}
                       </span>
                     )}
                   </CommandItem>
