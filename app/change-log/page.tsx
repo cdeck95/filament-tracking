@@ -68,7 +68,7 @@ const updates: ChangeLogEntry[] = [
     ],
   },
   {
-    version: "1.1.1",
+    version: "1.2.0",
     date: "2024-12-15",
     changes: [
       "Centered the QR code on the Filament page",
@@ -77,6 +77,9 @@ const updates: ChangeLogEntry[] = [
       "Fixed the search functionality to include all fields in the table",
       "Bar Chart is now sorted by weight descending",
       "Bar Chart now uses the color of the filament for the color of the bar",
+      "Added sidebar navigation",
+      "Added authentication",
+      "Added Data Management section, can now edit and delete brands, colors and materials",
     ],
   },
 ];
