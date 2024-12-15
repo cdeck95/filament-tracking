@@ -74,6 +74,7 @@ const updates: ChangeLogEntry[] = [
       "Centered the QR code on the Filament page",
       "Fixed a bug where the column headers would not display correctly",
       "Added a 'diff' calculation to the filament weight column to show the difference between the starting weight and current weight",
+      "Fixed the search functionality to include all fields in the table",
     ],
   },
 ];

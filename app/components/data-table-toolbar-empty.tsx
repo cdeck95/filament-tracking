@@ -13,13 +13,13 @@ interface DataTableToolbarProps<TData> {
   table: Table<TData>;
   globalFilter: string;
   setSearchTerm: (value: string) => void;
-  setGlobalFilter: (value: string) => void;
+  handleGlobalFilter: (value: string) => void;
 }
 
 export function DataTableToolbarEmpty<TData>({
   table,
   globalFilter,
-  setGlobalFilter,
+  handleGlobalFilter,
   setSearchTerm,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0;
@@ -120,13 +120,10 @@ export function DataTableToolbarEmpty<TData>({
           <>
             <div className="flex flex-row items-start w-full">
               <Input
-                placeholder="Search brands, colors, materials..."
+                placeholder="Search all columns..."
                 value={globalFilter}
-                onChange={(event) => {
-                  setGlobalFilter(event.target.value);
-                  setSearchTerm(event.target.value);
-                }}
-                className="max-w-sm"
+                onChange={(event) => handleGlobalFilter(event.target.value)}
+                className="h-8 w-[150px] lg:w-[250px]"
               />
             </div>
             <div className="flex flex-row items-start w-full gap-4">
@@ -136,7 +133,7 @@ export function DataTableToolbarEmpty<TData>({
                   title="Brand"
                   options={brandOptions}
                   globalFilter={globalFilter}
-                  setGlobalFilter={setGlobalFilter}
+                  setGlobalFilter={handleGlobalFilter}
                   setSearchTerm={setSearchTerm}
                 />
               )}
@@ -146,7 +143,7 @@ export function DataTableToolbarEmpty<TData>({
                   title="Material"
                   options={materialOptions}
                   globalFilter={globalFilter}
-                  setGlobalFilter={setGlobalFilter}
+                  setGlobalFilter={handleGlobalFilter}
                   setSearchTerm={setSearchTerm}
                 />
               )}
@@ -158,7 +155,7 @@ export function DataTableToolbarEmpty<TData>({
                   title="Color"
                   options={colorOptions}
                   globalFilter={globalFilter}
-                  setGlobalFilter={setGlobalFilter}
+                  setGlobalFilter={handleGlobalFilter}
                   setSearchTerm={setSearchTerm}
                 />
               )}
@@ -177,13 +174,10 @@ export function DataTableToolbarEmpty<TData>({
         ) : (
           <div className="flex flex-row items-center space-x-2">
             <Input
-              placeholder="Search brands, colors, materials..."
+              placeholder="Search all columns..."
               value={globalFilter}
-              onChange={(event) => {
-                setGlobalFilter(event.target.value);
-                setSearchTerm(event.target.value);
-              }}
-              className="max-w-sm"
+              onChange={(event) => handleGlobalFilter(event.target.value)}
+              className="h-8 w-[150px] lg:w-[250px]"
             />
             {table.getColumn("brand") && brandOptions.length > 0 && (
               <DataTableFacetedFilter
@@ -191,7 +185,7 @@ export function DataTableToolbarEmpty<TData>({
                 title="Brand"
                 options={brandOptions}
                 globalFilter={globalFilter}
-                setGlobalFilter={setGlobalFilter}
+                setGlobalFilter={handleGlobalFilter}
                 setSearchTerm={setSearchTerm}
               />
             )}
@@ -201,7 +195,7 @@ export function DataTableToolbarEmpty<TData>({
                 title="Material"
                 options={materialOptions}
                 globalFilter={globalFilter}
-                setGlobalFilter={setGlobalFilter}
+                setGlobalFilter={handleGlobalFilter}
                 setSearchTerm={setSearchTerm}
               />
             )}
@@ -211,7 +205,7 @@ export function DataTableToolbarEmpty<TData>({
                 title="Color"
                 options={colorOptions}
                 globalFilter={globalFilter}
-                setGlobalFilter={setGlobalFilter}
+                setGlobalFilter={handleGlobalFilter}
                 setSearchTerm={setSearchTerm}
               />
             )}

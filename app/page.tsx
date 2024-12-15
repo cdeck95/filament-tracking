@@ -37,6 +37,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   LabelList,
   XAxis,
   YAxis,
@@ -441,14 +442,40 @@ export default function Home() {
     getFacetedUniqueValues: getFacetedUniqueValues(), // Add this line
     onRowSelectionChange: setRowSelection,
     globalFilterFn: (row, columnId, filterValue) => {
-      const value = row.getValue(columnId);
-      if (typeof value === "string" || typeof value === "number") {
-        return String(value)
-          .toLowerCase()
-          .includes(String(filterValue).toLowerCase());
-      }
-      return false;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const getValue = (obj: any, path: string) => {
+        const keys = path.split(".");
+        return keys.reduce(
+          (acc, key) => (acc && acc[key] !== undefined ? acc[key] : null),
+          obj
+        );
+      };
+
+      const searchableFields = [
+        "id",
+        "brand",
+        "material",
+        "color.name",
+        "weight",
+        "location",
+        "notes",
+      ];
+
+      return searchableFields.some((field) => {
+        const value = getValue(row.original, field);
+        const safeValue = value !== null ? String(value).toLowerCase() : "";
+        return safeValue.includes(filterValue.toLowerCase());
+      });
     },
+    // globalFilterFn: (row, columnId, filterValue) => {
+    //   const value = row.getValue(columnId);
+    //   if (typeof value === "string" || typeof value === "number") {
+    //     return String(value)
+    //       .toLowerCase()
+    //       .includes(String(filterValue).toLowerCase());
+    //   }
+    //   return false;
+    // },
     state: {
       sorting,
       columnFilters,
@@ -458,6 +485,11 @@ export default function Home() {
     },
     onGlobalFilterChange: setGlobalFilter,
   });
+
+  const handleGlobalFilter = (value: string) => {
+    setGlobalFilter(value);
+    table.setGlobalFilter(value);
+  };
 
   const table2 = useReactTable({
     data: emptyFilaments,
@@ -625,6 +657,7 @@ export default function Home() {
       id: filament.id,
       label: `${filament.brand} ${filament.material} ${filament.color.name}`,
       weight: filament.totalWeight,
+      color: filament.color.hex, // Include the color hex value
     }));
   }, [table.getFilteredRowModel().rows]);
 
@@ -792,11 +825,14 @@ export default function Home() {
               />
               <ChartTooltip content={<ChartTooltipContent />} />
               <Bar dataKey="weight" fill="var(--color-weight)">
+                {transformedFilaments.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
                 <LabelList
                   dataKey="weight"
                   position="right"
                   formatter={(value: number) => `${value}g`}
-                  style={{ fill: "var(--color-weight)", fontSize: "12px" }}
+                  style={{ fontSize: "12px" }}
                 />
               </Bar>
             </BarChart>
@@ -1070,44 +1106,6 @@ export default function Home() {
       </div>
 
       <div className="space-y-4">
-        {/* <div className="flex items-center py-4">
-          <Input
-            placeholder="Search brands, colors, materials..."
-            value={globalFilter}
-            onChange={(event) => {
-              setGlobalFilter(event.target.value);
-              setSearchTerm(event.target.value);
-            }}
-            className="max-w-sm"
-          />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                Columns <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div> */}
-
         <Tabs defaultValue="active" className="w-full">
           <TabsList className="grid w-full grid-cols-2 w-[80%] md:w-[400px] justify-center mx-auto">
             <TabsTrigger value="active" onClick={() => setActiveTab("active")}>
@@ -1130,7 +1128,7 @@ export default function Home() {
                   <DataTableToolbar
                     table={table}
                     globalFilter={globalFilter}
-                    setGlobalFilter={setGlobalFilter}
+                    handleGlobalFilter={handleGlobalFilter}
                     setSearchTerm={setSearchTerm}
                   />
                 )}
@@ -1212,7 +1210,7 @@ export default function Home() {
                   <DataTableToolbarEmpty
                     table={table2}
                     globalFilter={globalFilter}
-                    setGlobalFilter={setGlobalFilter}
+                    handleGlobalFilter={handleGlobalFilter}
                     setSearchTerm={setSearchTerm}
                   />
                 )}
