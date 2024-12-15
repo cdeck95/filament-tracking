@@ -76,6 +76,7 @@ const updates: ChangeLogEntry[] = [
       "Added a 'diff' calculation to the filament weight column to show the difference between the starting weight and current weight",
       "Fixed the search functionality to include all fields in the table",
       "Bar Chart is now sorted by weight descending",
+      "Bar Chart now uses the color of the filament for the color of the bar",
     ],
   },
 ];
