@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { list, put } from "@vercel/blob";
 import { Filament } from "@/app/types/Filament";
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 
-async function getFilaments(): Promise<Filament[]> {
+async function getFilaments(kindeId: string): Promise<Filament[]> {
   const { blobs } = await list();
   const filamentsBlob = blobs.find((blob) =>
-    blob.pathname.startsWith("filaments.json")
+    blob.pathname.startsWith(`${kindeId}/filaments.json`)
   );
 
   if (!filamentsBlob) {
@@ -29,8 +30,11 @@ async function getFilaments(): Promise<Filament[]> {
   return updatedFilaments;
 }
 
-async function saveFilaments(filaments: Filament[]): Promise<void> {
-  await put("filaments.json", JSON.stringify(filaments), {
+async function saveFilaments(
+  kindeId: string,
+  filaments: Filament[]
+): Promise<void> {
+  await put(`${kindeId}/filaments.json`, JSON.stringify(filaments), {
     access: "public",
     contentType: "application/json",
     addRandomSuffix: false,
@@ -43,8 +47,14 @@ export async function GET(
 ) {
   try {
     console.log(`Fetching filament with ID: ${params.id}`);
+    const { getUser } = getKindeServerSession();
+    const user = await getUser();
 
-    const filaments = await getFilaments();
+    if (!user || !user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const filaments = await getFilaments(user.id);
     const filament = filaments.find((f) => f.id === parseInt(params.id));
 
     if (!filament) {
@@ -71,9 +81,15 @@ export async function PUT(
 ) {
   try {
     console.log(`Updating filament with ID: ${params.id}`);
+    const { getUser } = getKindeServerSession();
+    const user = await getUser();
+
+    if (!user || !user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const updatedFilament: Filament = await req.json();
-    const filaments = await getFilaments();
+    const filaments = await getFilaments(user.id);
     const index = filaments.findIndex((f) => f.id === parseInt(params.id));
 
     if (index === -1) {
@@ -91,7 +107,7 @@ export async function PUT(
       updatedAt: new Date(), // Set updatedAt to the current date and time
     };
 
-    await saveFilaments(filaments);
+    await saveFilaments(user.id, filaments);
 
     return NextResponse.json(filaments[index]);
   } catch (error) {
@@ -109,8 +125,14 @@ export async function DELETE(
 ) {
   try {
     console.log(`Deleting filament with ID: ${params.id}`);
+    const { getUser } = getKindeServerSession();
+    const user = await getUser();
 
-    const filaments = await getFilaments();
+    if (!user || !user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const filaments = await getFilaments(user.id);
     const index = filaments.findIndex((f) => f.id === parseInt(params.id));
 
     if (index === -1) {
@@ -122,7 +144,7 @@ export async function DELETE(
     }
 
     filaments.splice(index, 1);
-    await saveFilaments(filaments);
+    await saveFilaments(user.id, filaments);
 
     return NextResponse.json({ message: "Filament deleted successfully" });
   } catch (error) {

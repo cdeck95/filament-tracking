@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { list, put } from "@vercel/blob";
 import { Filament } from "@/app/types/Filament";
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 
-async function getFilaments(): Promise<Filament[]> {
+async function getFilaments(kindeId: string): Promise<Filament[]> {
   const { blobs } = await list();
-  const filamentsBlob = blobs.find((blob) =>
-    blob.pathname.startsWith("filaments.json")
+  const filamentsBlob = blobs.find(
+    (blob) => blob.pathname === `${kindeId}/filaments.json`
   );
 
   if (!filamentsBlob) {
@@ -27,13 +28,16 @@ async function getFilaments(): Promise<Filament[]> {
   }));
   //console.log("Filaments updated:", updatedFilaments);
 
-  await saveFilaments(updatedFilaments);
+  await saveFilaments(kindeId, updatedFilaments);
 
   return updatedFilaments;
 }
 
-async function saveFilaments(filaments: Filament[]): Promise<void> {
-  await put("filaments.json", JSON.stringify(filaments), {
+async function saveFilaments(
+  kindeId: string,
+  filaments: Filament[]
+): Promise<void> {
+  await put(`${kindeId}/filaments.json`, JSON.stringify(filaments), {
     access: "public",
     contentType: "application/json",
     addRandomSuffix: false,
@@ -43,7 +47,14 @@ async function saveFilaments(filaments: Filament[]): Promise<void> {
 export async function GET() {
   try {
     console.log("Fetching and checking filaments...");
-    let filaments = await getFilaments();
+    const { getUser } = getKindeServerSession();
+    const user = await getUser();
+
+    if (!user || !user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    let filaments = await getFilaments(user.id);
     let updated = false;
 
     filaments = filaments.map((filament) => {
@@ -62,7 +73,7 @@ export async function GET() {
 
     if (updated) {
       console.log("Updating filaments with corrected weight values...");
-      await saveFilaments(filaments);
+      await saveFilaments(user.id, filaments);
     }
 
     return NextResponse.json(filaments);
@@ -77,17 +88,24 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const { getUser } = getKindeServerSession();
+    const user = await getUser();
+
+    if (!user || !user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     console.log("Adding new filament...");
     const newFilament: Omit<Filament, "id"> = await req.json();
     console.log("New filament:", newFilament);
 
-    const filaments = await getFilaments();
+    const filaments = await getFilaments(user.id);
     const newId =
       filaments.length > 0 ? Math.max(...filaments.map((f) => f.id)) + 1 : 1;
     const filamentWithId: Filament = { ...newFilament, id: newId };
 
     filaments.push(filamentWithId);
-    await saveFilaments(filaments);
+    await saveFilaments(user.id, filaments);
 
     return NextResponse.json({
       message: "Filament added successfully",
