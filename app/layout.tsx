@@ -10,6 +10,8 @@ import { AppSidebar } from "./components/navigation-sidebar";
 import SideMenu from "./components/sidemenu";
 import MenuHeader from "./components/menuheader";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import LoginPage from "./login/page";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,11 +20,30 @@ export const metadata: Metadata = {
   description: "A simple filament tracking app built with Next.js",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { getUser } = getKindeServerSession();
+  const user = await getUser();
+
+  if (!user) {
+    return (
+      <html lang="en">
+        <body className={inter.className}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <LoginPage />
+          </ThemeProvider>
+        </body>
+      </html>
+    );
+  }
   return (
     <html lang="en">
       <body className={inter.className}>

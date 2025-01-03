@@ -5,6 +5,28 @@
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
+.bebas-font {
+  font-family: var(--font-bebas);
+}
+
+:root {
+  --primary-blue: #005daa;
+  --border-primary-blue: #228de5;
+  --dark-primary: #353535;
+  --secondary-blue: #228de5;
+  --primary-black: #000000;
+  --border-primary-black: #606060;
+  --primary-red: #ef3f3f;
+  --secondary-red: #b90c0c;
+  --border-primary-red: #b90c0c;
+  --primary-white: #ffffff;
+  --primary-grey: #f7f7f7;
+  --primary-green: #55de1f;
+  --table-separator: #dcdcdc;
+  --error-red: #ff0000;
+  box-sizing: border-box;
+  overflow: hidden;
+}
 
 @layer utilities {
   .text-balance {

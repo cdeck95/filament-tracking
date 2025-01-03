@@ -781,69 +781,71 @@ export default function Home() {
   return (
     <div className="grid grid-cols-1 gap-2 p-2">
       <h1 className="text-3xl font-bold mb-2 text-center">Filament Tracker</h1>
-      <Card className="mb-2 hidden lg:block">
-        <CardHeader>
-          <CardTitle>Filament Stock Overview</CardTitle>
-          <CardDescription>
-            Visual representation of your current filament stock
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer
-            config={{
-              weight: {
-                label: "Weight (g)",
-                color: "hsl(var(--chart-1))",
-              },
-            }}
-            className="max-h-[350px]"
-          >
-            <BarChart
-              data={transformedFilaments.sort((a, b) => b.weight - a.weight)} // Sort by weight descending // Use transformed filaments with string id
-              layout="vertical" // Set layout to vertical
-              margin={{ top: 10, right: 10, bottom: 10, left: 20 }}
-              barCategoryGap="20%" // Adjust the gap between categories
-              barGap={5} // Adjust the gap between bars within a category
+      {filaments && filaments.length > 0 && (
+        <Card className="mb-2 hidden lg:block">
+          <CardHeader>
+            <CardTitle>Filament Stock Overview</CardTitle>
+            <CardDescription>
+              Visual representation of your current filament stock
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              config={{
+                weight: {
+                  label: "Weight (g)",
+                  color: "hsl(var(--chart-1))",
+                },
+              }}
+              className="max-h-[350px]"
             >
-              <CartesianGrid horizontal={false} />
-              <XAxis
-                type="number"
-                label={{
-                  value: "Weight (g)",
-                  position: "insideBottom",
-                  offset: -5,
-                }}
-                domain={[0, "auto"]} // Set range from 0 to auto
-              />
-              <YAxis
-                type="category"
-                dataKey="label" // Using the new concatenated label for y-axis
-                tick={{ fontSize: 10 }}
-                tickMargin={20} // Increase tick margin for more space between labels
-                interval={0} // Show all labels
-                textAnchor="end"
-              />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="weight" fill="var(--color-weight)">
-                {transformedFilaments.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={
-                      entry.color !== "#FFFFFF" ? entry.color : "black" // Use black color for white filaments
-                    }
-                  />
-                ))}
-                <LabelList
-                  dataKey="weight"
-                  position="right"
-                  formatter={(value: number) => `${value}g`}
-                  style={{ fontSize: "12px" }}
+              <BarChart
+                data={transformedFilaments.sort((a, b) => b.weight - a.weight)} // Sort by weight descending // Use transformed filaments with string id
+                layout="vertical" // Set layout to vertical
+                margin={{ top: 10, right: 10, bottom: 10, left: 20 }}
+                barCategoryGap="20%" // Adjust the gap between categories
+                barGap={5} // Adjust the gap between bars within a category
+              >
+                <CartesianGrid horizontal={false} />
+                <XAxis
+                  type="number"
+                  label={{
+                    value: "Weight (g)",
+                    position: "insideBottom",
+                    offset: -5,
+                  }}
+                  domain={[0, "auto"]} // Set range from 0 to auto
                 />
-              </Bar>
-            </BarChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
+                <YAxis
+                  type="category"
+                  dataKey="label" // Using the new concatenated label for y-axis
+                  tick={{ fontSize: 10 }}
+                  tickMargin={20} // Increase tick margin for more space between labels
+                  interval={0} // Show all labels
+                  textAnchor="end"
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="weight" fill="var(--color-weight)">
+                  {transformedFilaments.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={
+                        entry.color !== "#FFFFFF" ? entry.color : "black" // Use black color for white filaments
+                      }
+                    />
+                  ))}
+                  <LabelList
+                    dataKey="weight"
+                    position="right"
+                    formatter={(value: number) => `${value}g`}
+                    style={{ fontSize: "12px" }}
+                  />
+                </Bar>
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="mb-4 flex flex-col sm:flex-row justify-end items-center gap-2">
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -1212,72 +1214,66 @@ export default function Home() {
                   />
                 )}
 
-                {emptyFilaments.length > 0 ? (
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                          <TableRow key={headerGroup.id}>
-                            {headerGroup.headers.map((header) => {
-                              return (
-                                <TableHead key={header.id}>
-                                  {header.isPlaceholder
-                                    ? null
-                                    : flexRender(
-                                        header.column.columnDef.header,
-                                        header.getContext()
-                                      )}
-                                </TableHead>
-                              );
-                            })}
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <TableRow key={headerGroup.id}>
+                          {headerGroup.headers.map((header) => {
+                            return (
+                              <TableHead key={header.id}>
+                                {header.isPlaceholder
+                                  ? null
+                                  : flexRender(
+                                      header.column.columnDef.header,
+                                      header.getContext()
+                                    )}
+                              </TableHead>
+                            );
+                          })}
+                        </TableRow>
+                      ))}
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading ? (
+                        Array.from({ length: 5 }).map((_, index) => (
+                          <TableRow key={index}>
+                            {columns.map((column, cellIndex) => (
+                              <TableCell key={cellIndex}>
+                                <Skeleton className="w-full h-6" />
+                              </TableCell>
+                            ))}
                           </TableRow>
-                        ))}
-                      </TableHeader>
-                      <TableBody>
-                        {isLoading ? (
-                          Array.from({ length: 5 }).map((_, index) => (
-                            <TableRow key={index}>
-                              {columns.map((column, cellIndex) => (
-                                <TableCell key={cellIndex}>
-                                  <Skeleton className="w-full h-6" />
-                                </TableCell>
-                              ))}
-                            </TableRow>
-                          ))
-                        ) : table.getRowModel().rows?.length ? (
-                          table.getRowModel().rows.map((row) => (
-                            <TableRow
-                              key={row.id}
-                              // data-state={row.getIsSelected() && "selected"}
-                            >
-                              {row.getVisibleCells().map((cell) => (
-                                <TableCell key={cell.id}>
-                                  {flexRender(
-                                    cell.column.columnDef.cell,
-                                    cell.getContext()
-                                  )}
-                                </TableCell>
-                              ))}
-                            </TableRow>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell
-                              colSpan={columns.length}
-                              className="h-24 text-center"
-                            >
-                              No results.
-                            </TableCell>
+                        ))
+                      ) : table.getRowModel().rows?.length ? (
+                        table.getRowModel().rows.map((row) => (
+                          <TableRow
+                            key={row.id}
+                            // data-state={row.getIsSelected() && "selected"}
+                          >
+                            {row.getVisibleCells().map((cell) => (
+                              <TableCell key={cell.id}>
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext()
+                                )}
+                              </TableCell>
+                            ))}
                           </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                ) : (
-                  <div className="h-full flex items-center justify-center">
-                    <p className="text-lg text-gray-500">No empty spools</p>
-                  </div>
-                )}
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={columns.length}
+                            className="h-24 text-center"
+                          >
+                            No results.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
                 <DataTablePagination table={table2} />
               </CardContent>
             </Card>
