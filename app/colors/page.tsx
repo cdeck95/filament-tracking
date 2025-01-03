@@ -21,12 +21,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { HexColorPicker } from "react-colorful";
 import { Color } from "../types/Color";
 import { toast } from "@/hooks/use-toast";
 
 export default function ColorsPage() {
   const [colors, setColors] = useState<Color[]>([]);
-  const [newColor, setNewColor] = useState<Color>({ name: "", hex: "" });
+  const [newColor, setNewColor] = useState<Color>({ name: "", hex: "#000000" });
   const [editingColor, setEditingColor] = useState<{
     original: Color;
     edited: Color;
@@ -72,7 +73,7 @@ export default function ColorsPage() {
       });
       if (response.ok) {
         setIsAddDialogOpen(false);
-        setNewColor({ name: "", hex: "" });
+        setNewColor({ name: "", hex: "#000000" });
         fetchColors();
         toast({
           title: "Success",
@@ -235,17 +236,13 @@ export default function ColorsPage() {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="hex" className="text-right">
-                Hex
-              </Label>
-              <Input
-                id="hex"
-                value={newColor.hex}
-                onChange={(e) =>
-                  setNewColor({ ...newColor, hex: e.target.value })
-                }
-                className="col-span-3"
-              />
+              <Label className="text-right">Color</Label>
+              <div className="col-span-3">
+                <HexColorPicker
+                  color={newColor.hex}
+                  onChange={(hex) => setNewColor({ ...newColor, hex })}
+                />
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -283,24 +280,17 @@ export default function ColorsPage() {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="editHex" className="text-right">
-                Hex
-              </Label>
-              <Input
-                id="editHex"
-                value={editingColor?.edited.hex || ""}
-                onChange={(e) =>
-                  setEditingColor((prev) =>
-                    prev
-                      ? {
-                          ...prev,
-                          edited: { ...prev.edited, hex: e.target.value },
-                        }
-                      : null
-                  )
-                }
-                className="col-span-3"
-              />
+              <Label className="text-right">Color</Label>
+              <div className="col-span-3">
+                <HexColorPicker
+                  color={editingColor?.edited.hex || "#000000"}
+                  onChange={(hex) =>
+                    setEditingColor((prev) =>
+                      prev ? { ...prev, edited: { ...prev.edited, hex } } : null
+                    )
+                  }
+                />
+              </div>
             </div>
           </div>
           <DialogFooter>
