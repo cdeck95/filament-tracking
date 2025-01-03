@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { list, put } from "@vercel/blob";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 
-export async function getMaterials(kindeId: string): Promise<string[]> {
+async function getMaterials(kindeId: string): Promise<string[]> {
   const { blobs } = await list();
   const materialsBlob = blobs.find(
     (blob) => blob.pathname === `${kindeId}/materials.json`
@@ -28,7 +28,7 @@ export async function getMaterials(kindeId: string): Promise<string[]> {
   return await response.json();
 }
 
-export async function saveMaterials(
+async function saveMaterials(
   materials: string[],
   kindeId: string
 ): Promise<void> {

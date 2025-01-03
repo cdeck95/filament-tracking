@@ -3,7 +3,7 @@ import { list, put } from "@vercel/blob";
 import { Color } from "@/app/types/Color";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 
-export async function getColors(kindeId: string): Promise<Color[]> {
+async function getColors(kindeId: string): Promise<Color[]> {
   const { blobs } = await list();
   const colorsBlob = blobs.find(
     (blob) => blob.pathname === `${kindeId}/colors.json`
@@ -29,10 +29,7 @@ export async function getColors(kindeId: string): Promise<Color[]> {
   return await response.json();
 }
 
-export async function saveColors(
-  colors: Color[],
-  kindeId: string
-): Promise<void> {
+async function saveColors(colors: Color[], kindeId: string): Promise<void> {
   await put(`${kindeId}/colors.json`, JSON.stringify(colors), {
     access: "public",
     contentType: "application/json",

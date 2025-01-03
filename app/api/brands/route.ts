@@ -27,7 +27,7 @@ async function getUserBrands(kindeId: string): Promise<string[]> {
   return []; // Return empty array if no brands found
 }
 
-export async function getBrands(kindeId: string): Promise<string[]> {
+async function getBrands(kindeId: string): Promise<string[]> {
   const { blobs } = await list();
   const brandsBlob = blobs.find(
     (blob) => blob.pathname === `${kindeId}/brands.json`
@@ -53,10 +53,7 @@ export async function getBrands(kindeId: string): Promise<string[]> {
   return await response.json();
 }
 
-export async function saveBrands(
-  brands: string[],
-  kindeId: string
-): Promise<void> {
+async function saveBrands(brands: string[], kindeId: string): Promise<void> {
   await put(`${kindeId}/brands.json`, JSON.stringify(brands), {
     access: "public",
     contentType: "application/json",
