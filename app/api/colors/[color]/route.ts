@@ -1,35 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { list, put } from "@vercel/blob";
 import { Color } from "@/app/types/Color";
-
-async function getColors(): Promise<Color[]> {
-  const { blobs } = await list();
-  const colorsBlob = blobs.find((blob) => blob.pathname === "colors.json");
-
-  if (!colorsBlob) {
-    return [];
-  }
-
-  const cacheBustingUrl = `${colorsBlob.url}?timestamp=${Date.now()}`;
-  const response = await fetch(cacheBustingUrl, { cache: "no-store" });
-  return await response.json();
-}
-
-async function saveColors(colors: Color[]): Promise<void> {
-  await put("colors.json", JSON.stringify(colors), {
-    access: "public",
-    contentType: "application/json",
-    addRandomSuffix: false,
-  });
-}
+import { getColors, saveColors } from "../route";
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { color: string } }
 ) {
   try {
+    const { getUser } = getKindeServerSession();
+    const user = await getUser();
     const { newColor } = await request.json();
-    const colors = await getColors();
+    const colors = await getColors(user.id);
     const decodedOriginalColorName = decodeURIComponent(params.color);
     const index = colors.findIndex(
       (color) => color.name === decodedOriginalColorName
@@ -40,7 +23,7 @@ export async function PATCH(
     }
 
     colors[index] = newColor;
-    await saveColors(colors);
+    await saveColors(colors, user.id);
 
     return NextResponse.json({ message: "Color updated successfully" });
   } catch (error) {
@@ -57,7 +40,9 @@ export async function DELETE(
   { params }: { params: { color: string } }
 ) {
   try {
-    const colors = await getColors();
+    const { getUser } = getKindeServerSession();
+    const user = await getUser();
+    const colors = await getColors(user.id);
     const decodedColorName = decodeURIComponent(params.color);
     const updatedColors = colors.filter(
       (color) => color.name !== decodedColorName
@@ -67,7 +52,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Color not found" }, { status: 404 });
     }
 
-    await saveColors(updatedColors);
+    await saveColors(updatedColors, user.id);
 
     return NextResponse.json({ message: "Color deleted successfully" });
   } catch (error) {

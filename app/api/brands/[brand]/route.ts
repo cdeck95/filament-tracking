@@ -1,34 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { list, put } from "@vercel/blob";
-
-async function getBrands(): Promise<string[]> {
-  const { blobs } = await list();
-  const brandsBlob = blobs.find((blob) => blob.pathname === "brands.json");
-
-  if (!brandsBlob) {
-    return [];
-  }
-
-  const cacheBustingUrl = `${brandsBlob.url}?timestamp=${Date.now()}`;
-  const response = await fetch(cacheBustingUrl, { cache: "no-store" });
-  return await response.json();
-}
-
-async function saveBrands(brands: string[]): Promise<void> {
-  await put("brands.json", JSON.stringify(brands), {
-    access: "public",
-    contentType: "application/json",
-    addRandomSuffix: false,
-  });
-}
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { getBrands, saveBrands } from "../route";
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { brand: string } }
 ) {
   try {
+    const { getUser } = getKindeServerSession();
+    const user = await getUser();
     const { newBrand } = await request.json();
-    const brands = await getBrands();
+    const brands = await getBrands(user.id);
     const decodedBrand = decodeURIComponent(params.brand);
     const index = brands.findIndex((brand) => brand === decodedBrand);
 
@@ -37,7 +20,7 @@ export async function PATCH(
     }
 
     brands[index] = newBrand;
-    await saveBrands(brands);
+    await saveBrands(brands, user.id);
 
     return NextResponse.json({ message: "Brand updated successfully" });
   } catch (error) {
@@ -54,7 +37,9 @@ export async function DELETE(
   { params }: { params: { brand: string } }
 ) {
   try {
-    const brands = await getBrands();
+    const { getUser } = getKindeServerSession();
+    const user = await getUser();
+    const brands = await getBrands(user.id);
     const decodedBrand = decodeURIComponent(params.brand);
     const updatedBrands = brands.filter((brand) => brand !== decodedBrand);
 
@@ -62,7 +47,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Brand not found" }, { status: 404 });
     }
 
-    await saveBrands(updatedBrands);
+    await saveBrands(updatedBrands, user.id);
 
     return NextResponse.json({ message: "Brand deleted successfully" });
   } catch (error) {
